@@ -43,11 +43,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const firstDayOfWeek = days.length > 0 ? days[0].dayOfWeek : 1;
   const blankDaysCount = firstDayOfWeek - 1;
 
-  // Range Selection State (drag or click-tap)
+  // Range Selection State (click-and-drag or tap)
   const [rangeAnchor, setRangeAnchor] = useState<string | null>(null);
   const [rangeTarget, setRangeTarget] = useState<string | null>(null);
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
-  const [isRangeMode, setIsRangeMode] = useState<boolean>(false);
 
   const rangeMin =
     rangeAnchor && rangeTarget
@@ -98,25 +97,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     if (isReadOnly) return;
     if (isMouseDown) {
       setIsMouseDown(false);
-      if (rangeAnchor === day.dateStr && !isRangeMode) {
-        // Single click -> open DayModal
+      if (rangeAnchor === day.dateStr) {
+        // Single click without drag -> open DayModal
         clearRange();
         onSelectDay(day);
-      }
-    }
-  };
-
-  const handleCellClick = (day: DayShiftInfo) => {
-    if (isReadOnly) {
-      onSelectDay(day);
-      return;
-    }
-    if (isRangeMode) {
-      if (!rangeAnchor) {
-        setRangeAnchor(day.dateStr);
-        setRangeTarget(day.dateStr);
-      } else {
-        setRangeTarget(day.dateStr);
       }
     }
   };
@@ -137,7 +121,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   return (
     <div className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]">
-      {/* Single Horizontal Toolbar Line (CoursingStats / Procursus pattern) */}
+      {/* Single Horizontal Toolbar Line */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf]">
         {/* Left: Navigation, Dropdown, Divider, Inline Legend */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -145,7 +129,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={onPrevMonth}
-              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95"
+              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95 cursor-pointer"
               title="Предыдущий месяц"
             >
               <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -160,7 +144,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
             <button
               onClick={onNextMonth}
-              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95"
+              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95 cursor-pointer"
               title="Следующий месяц"
             >
               <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -193,33 +177,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Today Button */}
         <div className="flex items-center gap-2 ml-auto">
-          {!isReadOnly && (
-            <button
-              type="button"
-              onClick={() => {
-                setIsRangeMode(!isRangeMode);
-                clearRange();
-              }}
-              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition shadow-2xs active:scale-95 cursor-pointer ${
-                isRangeMode
-                  ? 'bg-[#b68231] text-white border-[#b68231]'
-                  : 'bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border-[#e7ddcf]'
-              }`}
-              title="Режим выбора диапазона дней"
-            >
-              <span>Выбор дней</span>
-            </button>
-          )}
-
           <button
             onClick={onJumpToday}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
             title="Перейти к текущему дню"
           >
             <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
-            <span className="hidden sm:inline">Текущий месяц</span>
+            <span>Текущий месяц</span>
           </button>
         </div>
       </div>
@@ -241,11 +207,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         })}
       </div>
 
-      {/* Days Grid - Pure Square Cells with Consistent Vertical Horizon */}
+      {/* Days Grid - Clean Square Cells */}
       <div
         className="grid grid-cols-7 gap-1.5 sm:gap-2"
         onMouseLeave={() => {
-          if (isMouseDown && !isRangeMode) {
+          if (isMouseDown) {
             setIsMouseDown(false);
           }
         }}
@@ -269,8 +235,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               onMouseDown={() => handleCellMouseDown(day)}
               onMouseEnter={() => handleCellMouseEnter(day)}
               onMouseUp={() => handleCellMouseUp(day)}
-              onClick={() => handleCellClick(day)}
-              className={`relative flex flex-col justify-between aspect-square min-h-[64px] sm:min-h-[82px] md:min-h-[92px] p-1.5 sm:p-2 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
+              className={`relative flex flex-col justify-between aspect-square min-h-[64px] sm:min-h-[82px] md:min-h-[92px] p-2 sm:p-2.5 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
                 def.colorBg
               } ${def.colorBorder} ${
                 isInActiveRange
@@ -286,12 +251,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   : ''
               }`}
             >
-              {/* Day Header (Number on Left, 2X/Status on Right) */}
+              {/* Day Header (Number on Left, 2X Tag on Right) */}
               <div className="flex items-start justify-between gap-1 leading-none">
                 <span
-                  className={`text-xs sm:text-sm font-semibold tabular-nums ${
+                  className={`text-sm sm:text-base font-bold tabular-nums ${
                     day.isToday
-                      ? 'text-[#b68231] font-bold'
+                      ? 'text-[#b68231]'
                       : isWeekend
                       ? 'text-[#9d4c37]'
                       : 'text-[#252320]'
@@ -300,36 +265,31 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   {day.dayNumber}
                 </span>
 
-                {/* 2X Double Pay Tag or Overridden marker */}
-                {day.isDoublePay ? (
+                {/* 2X Double Pay Tag on Holidays */}
+                {day.isDoublePay && (
                   <span
-                    className="inline-flex items-center px-1 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
+                    className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
                     title={`Двойная оплата: ${day.holidayName || 'Праздник РФ'}`}
                   >
                     2X
                   </span>
-                ) : day.isOverridden ? (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-[#b68231] shrink-0 mt-0.5"
-                    title="Статус изменен вручную"
-                  />
-                ) : null}
+                )}
               </div>
 
-              {/* Status Content (Centered on a Consistent Axis) */}
-              <div className="flex items-center justify-center gap-1.5 my-auto">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${def.dotColor}`} />
-                <span className={`text-[11px] sm:text-xs font-semibold truncate ${def.colorText}`}>
-                  <span className="sm:hidden">{def.shortLabel}</span>
-                  <span className="hidden sm:inline">{def.label}</span>
-                </span>
+              {/* Center Area: only shown for Overtime to clearly identify extra shift */}
+              <div className="flex items-center justify-center my-auto">
+                {day.status === 'overtime' && (
+                  <span className="text-[10px] sm:text-xs font-bold text-[#7f1d1d] px-1.5 py-0.5 rounded-md bg-[#fbdcd9] border border-[#e57373] border-dashed">
+                    Подработка
+                  </span>
+                )}
               </div>
 
-              {/* Bottom Slot (Reserved for Holiday text, never displaces middle status) */}
+              {/* Bottom Slot (Reserved for Holiday text) */}
               <div className="h-3.5 sm:h-4 flex items-center justify-center overflow-hidden">
                 {day.holidayName ? (
                   <span
-                    className="text-[9px] text-[#9d4c37] font-medium truncate leading-none block text-center"
+                    className="text-[9px] sm:text-[10px] text-[#9d4c37] font-semibold truncate leading-none block text-center"
                     title={day.holidayName}
                   >
                     {day.holidayName}
@@ -342,7 +302,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       </div>
 
       {/* Floating Range Action Bar (Visible when multiple days selected) */}
-      {rangeMin && rangeMax && (
+      {rangeMin && rangeMax && rangeMin !== rangeMax && (
         <div className="sticky bottom-2 z-40 mt-4 p-3 bg-white/95 backdrop-blur-md border border-[#d8b57a] rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-2.5 animate-in fade-in-0 slide-in-from-bottom-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#252320]">
@@ -357,35 +317,35 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             <button
               type="button"
               onClick={() => handleApplyRangeStatus('vacation')}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fef7db] hover:bg-[#fdefbd] text-[#7d5600] border border-[#f6dc84] transition shadow-2xs active:scale-95"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fef7db] hover:bg-[#fdefbd] text-[#7d5600] border border-[#f6dc84] transition shadow-2xs active:scale-95 cursor-pointer"
             >
               Отпуск
             </button>
             <button
               type="button"
               onClick={() => handleApplyRangeStatus('overtime')}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fbdcd9] hover:bg-[#f8c8c3] text-[#7f1d1d] border border-[#e57373] border-dashed transition shadow-2xs active:scale-95"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fbdcd9] hover:bg-[#f8c8c3] text-[#7f1d1d] border border-[#e57373] border-dashed transition shadow-2xs active:scale-95 cursor-pointer"
             >
               Подработка
             </button>
             <button
               type="button"
               onClick={() => handleApplyRangeStatus('work')}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fdeeed] hover:bg-[#fbdcd9] text-[#93231c] border border-[#f5b8b2] transition shadow-2xs active:scale-95"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#fdeeed] hover:bg-[#fbdcd9] text-[#93231c] border border-[#f5b8b2] transition shadow-2xs active:scale-95 cursor-pointer"
             >
               Работа
             </button>
             <button
               type="button"
               onClick={() => handleApplyRangeStatus('off')}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#eaf5ec] hover:bg-[#ddf0e0] text-[#215128] border border-[#b8deb9] transition shadow-2xs active:scale-95"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#eaf5ec] hover:bg-[#ddf0e0] text-[#215128] border border-[#b8deb9] transition shadow-2xs active:scale-95 cursor-pointer"
             >
               Выходной
             </button>
             <button
               type="button"
               onClick={handleResetRangeStatus}
-              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#f3ede4] hover:bg-[#e7ddcf] text-[#252320] border border-[#d8b57a] transition shadow-2xs active:scale-95 flex items-center gap-1"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-[#f3ede4] hover:bg-[#e7ddcf] text-[#252320] border border-[#d8b57a] transition shadow-2xs active:scale-95 flex items-center gap-1 cursor-pointer"
               title="Сбросить все дни диапазона к эталону 2/2"
             >
               <RotateCcw className="w-3 h-3 text-[#b68231]" strokeWidth={2} />
@@ -394,7 +354,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             <button
               type="button"
               onClick={clearRange}
-              className="p-1 rounded-full text-[#81796e] hover:text-[#252320] hover:bg-[#f3ede4] transition ml-1"
+              className="p-1 rounded-full text-[#81796e] hover:text-[#252320] hover:bg-[#f3ede4] transition ml-1 cursor-pointer"
               title="Снять выделение"
             >
               <X className="w-4 h-4" strokeWidth={1.5} />
