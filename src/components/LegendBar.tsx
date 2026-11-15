@@ -6,28 +6,28 @@ export const LegendBar: React.FC = () => {
       <div className="flex flex-wrap items-center gap-4 sm:gap-6">
         {/* Смена */}
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#55738a] shrink-0" />
-          <span className="text-[#252320] font-medium">Смена</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#1e6f9f] shrink-0" />
+          <span className="text-[#184260] font-semibold">Смена</span>
           <span className="text-[#81796e] text-[11px]">(20:00 — 08:00)</span>
         </div>
 
         {/* Выходной */}
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#bcb7ad] shrink-0" />
-          <span className="text-[#81796e] font-medium">Выходной</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2e7d32] shrink-0" />
+          <span className="text-[#215128] font-semibold">Выходной</span>
         </div>
 
         {/* Подработка */}
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#b68231] shrink-0" />
-          <span className="text-[#7b511c] font-medium">Подработка</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
+          <span className="text-[#93231c] font-semibold">Подработка</span>
           <span className="text-[#81796e] text-[11px]">(20:00)</span>
         </div>
 
         {/* Отпуск */}
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#557658] shrink-0" />
-          <span className="text-[#354a38] font-medium">Отпуск</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100] shrink-0" />
+          <span className="text-[#7d5600] font-semibold">Отпуск</span>
         </div>
       </div>
 

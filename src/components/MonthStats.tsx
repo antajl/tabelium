@@ -36,26 +36,26 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
       {/* Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
         {/* Regular Work */}
-        <div className="p-3 rounded-xl bg-white border border-[#e7ddcf] flex flex-col justify-between shadow-2xs">
-          <div className="flex items-center justify-between text-[#81796e] text-xs font-medium">
+        <div className="p-3 rounded-xl bg-[#edf4f9] border border-[#bcd4e6] flex flex-col justify-between shadow-2xs">
+          <div className="flex items-center justify-between text-[#184260] text-xs font-semibold">
             <span>Основные смены</span>
-            <span className="w-2 h-2 rounded-full bg-[#55738a]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#1e6f9f]" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#252320]">{stats.workDaysCount}</span>
-            <span className="text-xs text-[#bcb7ad]">смен</span>
+            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#184260]">{stats.workDaysCount}</span>
+            <span className="text-xs text-[#527a99]">смен</span>
           </div>
         </div>
 
         {/* Overtime */}
-        <div className="p-3 rounded-xl bg-[#faf6f0] border border-[#e7d1ab] flex flex-col justify-between shadow-2xs">
-          <div className="flex items-center justify-between text-[#7b511c] text-xs font-medium">
+        <div className="p-3 rounded-xl bg-[#fdeeed] border border-[#f5b8b2] flex flex-col justify-between shadow-2xs">
+          <div className="flex items-center justify-between text-[#93231c] text-xs font-semibold">
             <span>Подработки</span>
-            <span className="w-2 h-2 rounded-full bg-[#b68231]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f]" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#7b511c]">{stats.overtimeDaysCount}</span>
-            <span className="text-xs text-[#b89565]">смен</span>
+            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#93231c]">{stats.overtimeDaysCount}</span>
+            <span className="text-xs text-[#b85a53]">смен</span>
           </div>
         </div>
 
@@ -65,7 +65,7 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
             ? 'bg-[#fbf4f0] border-[#efc8b4]'
             : 'bg-white border-[#e7ddcf]'
         }`}>
-          <div className="flex items-center justify-between text-xs font-medium">
+          <div className="flex items-center justify-between text-xs font-semibold">
             <span className={stats.doublePayShiftsCount > 0 ? 'text-[#9d4c37] font-semibold' : 'text-[#81796e]'}>
               2X Праздничные
             </span>
@@ -80,14 +80,14 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
         </div>
 
         {/* Vacation */}
-        <div className="p-3 rounded-xl bg-[#f0f5f0] border border-[#c8dcc9] flex flex-col justify-between shadow-2xs">
-          <div className="flex items-center justify-between text-[#354a38] text-xs font-medium">
+        <div className="p-3 rounded-xl bg-[#fef7db] border border-[#f6dc84] flex flex-col justify-between shadow-2xs">
+          <div className="flex items-center justify-between text-[#7d5600] text-xs font-semibold">
             <span>Отпуск</span>
-            <span className="w-2 h-2 rounded-full bg-[#557658]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100]" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#354a38]">{stats.vacationDaysCount}</span>
-            <span className="text-xs text-[#7a9f7d]">дней</span>
+            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#7d5600]">{stats.vacationDaysCount}</span>
+            <span className="text-xs text-[#a2802d]">дней</span>
           </div>
         </div>
       </div>

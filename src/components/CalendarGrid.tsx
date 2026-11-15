@@ -133,10 +133,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             <div
               key={day.dateStr}
               onClick={() => onSelectDay(day)}
-              className={`relative flex flex-col justify-between h-20 sm:h-24 p-2 sm:p-2.5 rounded-xl border select-none cursor-pointer transition-colors shadow-2xs ${
+              className={`relative flex flex-col justify-between h-20 sm:h-24 p-2 sm:p-2.5 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
                 def.colorBg
               } ${def.colorBorder} ${
-                day.isDoublePay ? 'border-[#e3a488] bg-[#fbf4f0]/60 ring-1 ring-[#e3a488]' : ''
+                day.isDoublePay ? 'ring-2 ring-[#e3a488] border-[#e3a488]' : ''
               } ${day.isToday ? 'outline outline-2 outline-[#b68231] outline-offset-1' : ''}`}
             >
               {/* Day Header */}
