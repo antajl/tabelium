@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
-import { RUSSIAN_DAY_OF_WEEK_SHORT } from '../utils/scheduleEngine';
+import { RUSSIAN_DAY_OF_WEEK_SHORT, formatVacationDateRange, pluralize } from '../utils/scheduleEngine';
 import { getColleagueTheme } from '../utils/colleagueThemes';
 import { MonthYearDropdown } from './MonthYearDropdown';
 
@@ -190,12 +190,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       return;
     }
 
-    if (day.holidayName) {
+    const hasTooltip = !!(
+      day.holidayName ||
+      (day.colleagueVacations && day.colleagueVacations.length > 0)
+    );
+
+    if (hasTooltip) {
       const rect = e.currentTarget.getBoundingClientRect();
       const cellCenterX = rect.left + rect.width / 2;
-      const isAbove = rect.top - 90 >= 10;
-      const top = isAbove ? rect.top - 88 : rect.bottom + 8;
-      const left = Math.max(12, Math.min(window.innerWidth - 272, cellCenterX - 130));
+      const isAbove = rect.top - 120 >= 10;
+      const top = isAbove ? rect.top - 110 : rect.bottom + 8;
+      const left = Math.max(12, Math.min(window.innerWidth - 280, cellCenterX - 130));
       const arrowX = Math.max(16, Math.min(244, cellCenterX - left));
 
       setTooltipPos({ top, left, isAbove, arrowX });
@@ -237,28 +242,42 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     }
   };
 
+  const [isCollapsing, setIsCollapsing] = useState<boolean>(false);
+
+  const handleBackToYearClick = () => {
+    if (isCollapsing || !onBackToYear) return;
+    setIsCollapsing(true);
+    setTimeout(() => {
+      onBackToYear();
+      setIsCollapsing(false);
+    }, 140);
+  };
+
   return (
     <div
       style={{ viewTransitionName: 'active-calendar-surface' } as React.CSSProperties}
-      className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]"
+      className={`bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-2.5 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)] transition-all duration-150 ${
+        isCollapsing ? 'scale-[0.985] opacity-90' : ''
+      }`}
     >
       {/* Single Horizontal Toolbar Line */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf] relative z-20">
+      <div className="flex items-center justify-between gap-1.5 sm:gap-2.5 pb-2.5 sm:pb-3.5 mb-2.5 sm:mb-3 border-b border-[#e7ddcf] relative z-20">
         {/* Left: Back to Year, Navigation, Dropdown */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {onBackToYear && (
             <button
-              onClick={onBackToYear}
-              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-xs font-semibold text-[#7b511c] transition shadow-2xs active:scale-95 cursor-pointer"
+              onClick={handleBackToYearClick}
+              className="h-8 px-2 sm:px-2.5 inline-flex items-center gap-1 sm:gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-xs font-semibold text-[#7b511c] transition shadow-2xs active:scale-95 cursor-pointer shrink-0"
               title={`Вернуться к обзору ${year} года`}
             >
               <ArrowLeft className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={2} />
-              <span>{year} год</span>
+              <span>{year}</span>
+              <span className="hidden sm:inline"> год</span>
             </button>
           )}
 
           {/* Month & Year Navigation (Unified Segmented Control, exact h-8 height) */}
-          <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs">
+          <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs shrink-0">
             <button
               onClick={onPrevMonth}
               className="w-7 h-7 flex items-center justify-center rounded text-[#81796e] hover:text-[#252320] hover:bg-white transition active:scale-95 cursor-pointer"
@@ -285,12 +304,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         </div>
 
         {/* Right: Actions (Today Button & Action Buttons) */}
-        <div className="flex items-center gap-2 ml-auto shrink-0 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
           {!isCurrentMonth && (
             <>
               <button
                 onClick={onJumpToday}
-                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-[#736b60] hover:text-[#252320] text-xs font-medium shadow-2xs transition active:scale-95 cursor-pointer"
+                className="h-8 px-2 sm:px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-[#736b60] hover:text-[#252320] text-xs font-medium shadow-2xs transition active:scale-95 cursor-pointer shrink-0"
                 title="Перейти к текущему месяцу"
               >
                 <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
@@ -302,7 +321,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           )}
 
           {isReadOnly ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a]">
                 <Eye className="w-3 h-3" strokeWidth={1.5} />
                 <span className="hidden sm:inline">Просмотр</span>
@@ -318,12 +337,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               {onOpenShare && (
                 <button
                   onClick={onOpenShare}
                   title="Поделиться графиком"
-                  className="h-8 inline-flex items-center gap-1.5 px-2.5 sm:px-3 rounded-lg border border-[#d8b57a] bg-[#fbf5eb] hover:bg-[#f3e7d5] text-[#2a1c0a] text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
+                  className="h-8 w-8 sm:w-auto px-0 sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#d8b57a] bg-[#fbf5eb] hover:bg-[#f3e7d5] text-[#2a1c0a] text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
                 >
                   <Share2 className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
                   <span className="hidden sm:inline">Поделиться</span>
@@ -372,12 +391,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       </div>
 
       {/* Days Grid - Clean Horizontal Rectangular Cells (No Vertical Scroll) */}
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {/* Transparent blank slots */}
         {Array.from({ length: blankDaysCount }).map((_, i) => (
           <div
             key={`blank-${i}`}
-            className="h-[58px] sm:h-[68px] lg:h-[74px] xl:h-[78px] rounded-xl opacity-0 pointer-events-none"
+            className="aspect-square sm:aspect-auto sm:h-[68px] lg:h-[74px] xl:h-[78px] rounded-lg sm:rounded-xl opacity-0 pointer-events-none"
           />
         ))}
 
@@ -393,7 +412,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               onMouseEnter={(e) => handleCellMouseEnter(day, e)}
               onMouseLeave={handleCellMouseLeave}
               onMouseUp={(e) => handleCellMouseUp(day, e)}
-              className={`relative flex flex-col justify-between h-[58px] sm:h-[68px] lg:h-[74px] xl:h-[78px] p-1.5 sm:p-2 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
+              className={`relative flex flex-col justify-between aspect-square sm:aspect-auto sm:h-[68px] lg:h-[74px] xl:h-[78px] p-1 sm:p-2 rounded-lg sm:rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
                 def.colorBg
               } ${def.colorBorder} ${
                 isInActiveRange
@@ -410,9 +429,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               }`}
             >
               {/* Day Header (Number on Left, 2X Tag / Note on Right) */}
-              <div className="flex items-start justify-between gap-1 leading-none">
+              <div className="flex items-start justify-between gap-0.5 sm:gap-1 leading-none w-full">
                 <span
-                  className={`text-sm sm:text-base font-bold tabular-nums ${
+                  className={`text-xs sm:text-base font-bold tabular-nums ${
                     day.isToday
                       ? 'text-[#b68231]'
                       : isWeekend
@@ -423,20 +442,20 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   {day.dayNumber}
                 </span>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                   {/* Note Indicator */}
                   {day.note && (
                     <span
                       title={`Заметка: ${day.note}`}
                       className="text-[#b68231] hover:text-[#7b511c]"
                     >
-                      <FileText className="w-3 h-3" strokeWidth={2} />
+                      <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3" strokeWidth={2} />
                     </span>
                   )}
 
                   {/* 2X Double Pay Tag on Holidays */}
                   {day.isDoublePay && (
-                    <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0">
+                    <span className="inline-flex items-center px-1 sm:px-1.5 py-0.2 rounded-full text-[8px] sm:text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0">
                       2X
                     </span>
                   )}
@@ -444,16 +463,30 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               </div>
 
               {/* Center Area: Colleague Vacations */}
-              <div className="flex flex-col items-center justify-center my-auto w-full overflow-hidden">
-                {day.colleagueVacations && day.colleagueVacations.length > 0 && (
-                  <div className="flex flex-col gap-0.5 w-full">
+              {day.colleagueVacations && day.colleagueVacations.length > 0 && (
+                <div className="flex flex-col items-center justify-center my-auto w-full overflow-hidden">
+                  {/* Mobile: Compact Color Dot Indicators */}
+                  <div className="flex sm:hidden items-center justify-center gap-1">
+                    {day.colleagueVacations.map((cv) => {
+                      const theme = getColleagueTheme(cv.colorTheme);
+                      return (
+                        <span
+                          key={cv.colleagueId + cv.vacationId}
+                          className="w-1.5 h-1.5 rounded-full shrink-0 shadow-2xs ring-1 ring-white/60"
+                          style={{ backgroundColor: theme.accentColor }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Tablet & Desktop: Full Badge */}
+                  <div className="hidden sm:flex flex-col gap-0.5 w-full">
                     {day.colleagueVacations.map((cv) => {
                       const theme = getColleagueTheme(cv.colorTheme);
                       return (
                         <div
                           key={cv.colleagueId + cv.vacationId}
                           className={`flex items-center justify-between px-1.5 py-0.5 rounded-md border text-[9px] sm:text-[10px] font-semibold leading-tight shadow-2xs truncate ${theme.cellBadgeBg} ${theme.cellBadgeBorder} ${theme.cellBadgeText}`}
-                          title={`Отпуск коллеги: ${cv.colleagueName} (${cv.startDate} — ${cv.endDate}, день ${cv.dayIndex} из ${cv.totalDays})`}
                         >
                           <span className="truncate flex items-center gap-1">
                             <span
@@ -467,17 +500,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       );
                     })}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Bottom Slot (Reserved for Holiday text) */}
-              <div className="h-3.5 sm:h-4 flex items-center justify-center overflow-hidden">
-                {day.holidayName ? (
-                  <span className="text-[9px] sm:text-[10px] text-[#9d4c37] font-semibold truncate leading-none block text-center">
+              {/* Bottom Slot: Holiday indicator */}
+              {day.holidayName ? (
+                <div className="h-3 sm:h-4 flex items-center justify-center overflow-hidden mt-auto w-full">
+                  <span className="text-[8px] sm:text-[10px] text-[#9d4c37] font-semibold truncate leading-none block text-center">
                     {day.holidayName}
                   </span>
-                ) : null}
-              </div>
+                </div>
+              ) : (
+                <div className="hidden sm:block sm:h-4" />
+              )}
             </div>
           );
         })}
@@ -551,57 +586,111 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         </div>
       )}
 
-      {/* Instant Holiday Tooltip (Old Money Styled) */}
+      {/* Instant Day Tooltip (Old Money Styled) */}
       {hoveredHoliday && !isMouseDown && (
         <div
           ref={holidayTooltipRef}
           role="tooltip"
-          className="fixed z-50 pointer-events-none w-max max-w-[280px] sm:max-w-xs px-3 py-2.5 bg-[#252320] text-[#faf8f4] border border-[#3e3830] rounded-xl shadow-[0_10px_28px_rgba(0,0,0,0.28)] flex flex-col gap-1.5 animate-in fade-in-0 zoom-in-95 duration-100"
+          className="fixed z-50 pointer-events-none w-max max-w-[280px] sm:max-w-xs px-3 py-2.5 bg-[#252320] text-[#faf8f4] border border-[#3e3830] rounded-xl shadow-[0_10px_28px_rgba(0,0,0,0.28)] flex flex-col gap-2 animate-in fade-in-0 zoom-in-95 duration-100"
           style={{
             top: tooltipPos.top,
             left: tooltipPos.left,
           }}
         >
-          {/* Header: Title + Badge (No emojis) */}
-          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
-            <span className="text-[11px] font-semibold text-[#f3e7d5]">
-              {hoveredHoliday.day.holidayCategory === 'transfer'
-                ? 'Перенос выходного'
-                : 'Праздник РФ'}
-            </span>
-            {hoveredHoliday.day.isDoublePay ? (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#9d4c37] text-white shadow-2xs">
-                2X Двойная оплата
-              </span>
-            ) : hoveredHoliday.day.holidayCategory === 'transfer' ? (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
-                Пост. Правительства РФ
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
-                ст. 112 ТК РФ
-              </span>
+          {/* Section 1: Holiday (if present) */}
+          {hoveredHoliday.day.holidayName && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+                <span className="text-[11px] font-semibold text-[#f3e7d5]">
+                  {hoveredHoliday.day.holidayCategory === 'transfer'
+                    ? 'Перенос выходного'
+                    : 'Праздник РФ'}
+                </span>
+                {hoveredHoliday.day.isDoublePay ? (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#9d4c37] text-white shadow-2xs">
+                    2X Двойная оплата
+                  </span>
+                ) : hoveredHoliday.day.holidayCategory === 'transfer' ? (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
+                    Пост. Правительства РФ
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
+                    ст. 112 ТК РФ
+                  </span>
+                )}
+              </div>
+
+              <div className="text-xs sm:text-[13px] font-bold text-[#faf8f4] leading-snug">
+                {hoveredHoliday.day.holidayFullName || hoveredHoliday.day.holidayName}
+              </div>
+
+              <div className="text-[10px] text-[#c4b5a0] leading-relaxed">
+                {hoveredHoliday.day.holidayDescription ||
+                  (hoveredHoliday.day.isDoublePay
+                    ? 'Официальный праздничный день. Работа и подработка оплачиваются в двойном размере (2X).'
+                    : 'Официальный нерабочий праздничный день в соответствии с Трудовым кодексом РФ.')}
+              </div>
+            </div>
+          )}
+
+          {/* Divider between Holiday and Vacations if both exist on this day */}
+          {hoveredHoliday.day.holidayName &&
+            hoveredHoliday.day.colleagueVacations &&
+            hoveredHoliday.day.colleagueVacations.length > 0 && (
+              <div className="border-t border-white/10 my-0.5" />
             )}
-          </div>
 
-          {/* Holiday Name */}
-          <div className="text-xs sm:text-[13px] font-bold text-[#faf8f4] leading-snug">
-            {hoveredHoliday.day.holidayFullName || hoveredHoliday.day.holidayName}
-          </div>
+          {/* Section 2: Colleague Vacations (if present) */}
+          {hoveredHoliday.day.colleagueVacations &&
+            hoveredHoliday.day.colleagueVacations.map((cv) => {
+              const theme = getColleagueTheme(cv.colorTheme);
+              return (
+                <div key={cv.colleagueId + cv.vacationId} className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#f3e7d5]">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: theme.accentColor }}
+                      />
+                      <span>Отпуск напарника</span>
+                    </div>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
+                      день {cv.dayIndex} из {cv.totalDays}
+                    </span>
+                  </div>
 
-          {/* Subtitle / Reason / Law reference */}
-          <div className="text-[10px] text-[#c4b5a0] leading-relaxed">
-            {hoveredHoliday.day.holidayDescription ||
-              (hoveredHoliday.day.isDoublePay
-                ? 'Официальный праздничный день. Работа и подработка оплачиваются в двойном размере (2X).'
-                : 'Официальный нерабочий праздничный день в соответствии с Трудовым кодексом РФ.')}
-          </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs sm:text-[13px] font-bold text-[#faf8f4] leading-snug">
+                      {cv.colleagueName}
+                    </span>
+                    {cv.role && (
+                      <span className="text-[10px] text-[#c4b5a0] font-medium">
+                        {cv.role}
+                      </span>
+                    )}
+                  </div>
 
-          {/* Optional Note preview if present */}
+                  <div className="text-[10px] text-[#c4b5a0] leading-relaxed">
+                    Период: {formatVacationDateRange(cv.startDate, cv.endDate)} ({cv.totalDays}{' '}
+                    {pluralize(cv.totalDays, 'день', 'дня', 'дней')})
+                  </div>
+
+                  {cv.note && (
+                    <div className="flex items-center gap-1.5 pt-1 border-t border-white/10 text-[10px] text-[#d8b57a]">
+                      <FileText className="w-3 h-3 text-[#b68231] shrink-0" strokeWidth={1.5} />
+                      <span className="truncate">Заметка: {cv.note}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+          {/* Optional Note preview if present on current user's day */}
           {hoveredHoliday.day.note && (
             <div className="flex items-center gap-1.5 pt-1 border-t border-white/10 text-[10px] text-[#d8b57a]">
               <FileText className="w-3 h-3 text-[#b68231] shrink-0" strokeWidth={1.5} />
-              <span className="truncate">Заметка: {hoveredHoliday.day.note}</span>
+              <span className="truncate">Моя заметка: {hoveredHoliday.day.note}</span>
             </div>
           )}
 

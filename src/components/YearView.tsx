@@ -9,7 +9,6 @@ import {
   Settings,
   Download,
   Eye,
-  Palmtree,
   Calendar,
   ArrowDown,
   ArrowUp,
@@ -84,7 +83,9 @@ export const YearView: React.FC<YearViewProps> = ({
   const [currentMonthInView, setCurrentMonthInView] = useState<boolean>(true);
   const [scrollDirectionToCurrent, setScrollDirectionToCurrent] = useState<'down' | 'up' | null>(null);
   const hasAutoScrolledRef = useRef(false);
+  const scrollAnimRef = useRef<number | null>(null);
 
+  // Smooth inertial scroll animation (approx. 380ms)
   const scrollToMonth = (m: number, smooth = true) => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
       setHighlightedMonth(m);
@@ -93,21 +94,65 @@ export const YearView: React.FC<YearViewProps> = ({
       }, 1800);
       return;
     }
-    const el = document.getElementById(`month-card-${m}`);
-    if (el) {
-      const yOffset = -16;
-      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      const targetTop = Math.max(0, y);
-      window.scrollTo({ top: targetTop, behavior: smooth ? 'smooth' : 'auto' });
-      if (document.documentElement) document.documentElement.scrollTop = targetTop;
-      if (document.body) document.body.scrollTop = targetTop;
 
+    const el = document.getElementById(`month-card-${m}`);
+    if (!el) return;
+
+    if (scrollAnimRef.current !== null) {
+      cancelAnimationFrame(scrollAnimRef.current);
+      scrollAnimRef.current = null;
+    }
+
+    const yOffset = -16;
+    const startY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    const targetY = Math.max(0, el.getBoundingClientRect().top + startY + yOffset);
+    const distance = targetY - startY;
+
+    if (!smooth || Math.abs(distance) < 4) {
+      window.scrollTo(0, targetY);
       setHighlightedMonth(m);
       setTimeout(() => {
         setHighlightedMonth((prev) => (prev === m ? null : prev));
       }, 1800);
+      return;
     }
+
+    const duration = 380;
+    const startTime = performance.now();
+
+    const step = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeInOutCubic: smooth acceleration, fast cruise, gentle deceleration
+      const ease =
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      const currentY = startY + distance * ease;
+      window.scrollTo(0, currentY);
+
+      if (progress < 1) {
+        scrollAnimRef.current = requestAnimationFrame(step);
+      } else {
+        scrollAnimRef.current = null;
+        setHighlightedMonth(m);
+        setTimeout(() => {
+          setHighlightedMonth((prev) => (prev === m ? null : prev));
+        }, 1800);
+      }
+    };
+
+    scrollAnimRef.current = requestAnimationFrame(step);
   };
+
+  useEffect(() => {
+    return () => {
+      if (scrollAnimRef.current !== null) {
+        cancelAnimationFrame(scrollAnimRef.current);
+      }
+    };
+  }, []);
 
   // Auto-scroll to target month on mobile/tablet when entering YearView
   useEffect(() => {
@@ -118,7 +163,7 @@ export const YearView: React.FC<YearViewProps> = ({
         if (window.innerWidth < 1280) {
           scrollToMonth(targetMonth, false);
         }
-      }, 60);
+      }, 420);
       return () => clearTimeout(timer);
     }
   }, [activeTransitionMonth, isCurrentYear, currentRealMonth]);
@@ -452,6 +497,39 @@ export const YearView: React.FC<YearViewProps> = ({
             </div>
           )}
         </div>
+
+        {/* Mobile/Tablet Quick Month Jump (xl:hidden) - All 12 months visible without horizontal scroll */}
+        <div className="xl:hidden flex flex-col gap-1.5 pt-2 border-t border-[#f2ede4]">
+          <div className="flex items-center justify-between text-[11px] text-[#81796e] px-0.5">
+            <span className="font-medium">Быстрый переход к месяцу:</span>
+            {isCurrentYear && (
+              <span className="text-[#b68231] font-semibold">
+                Сейчас: {currentRealMonthName}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-6 gap-1 w-full bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-1 shadow-2xs">
+            {monthsData.map((mData) => {
+              const isCurrent = isCurrentYear && mData.month === currentRealMonth;
+              return (
+                <button
+                  key={mData.month}
+                  type="button"
+                  onClick={() => scrollToMonth(mData.month, true)}
+                  onDoubleClick={() => handleMonthClick(mData.month)}
+                  title={`${mData.monthName} — кликните для перехода, двойной клик для открытия`}
+                  className={`h-7 rounded-md font-semibold text-xs transition cursor-pointer flex items-center justify-center active:scale-95 ${
+                    isCurrent
+                      ? 'bg-[#b68231] text-white shadow-xs font-bold'
+                      : 'text-[#736b60] hover:text-[#252320] hover:bg-white bg-transparent'
+                  }`}
+                >
+                  <span>{mData.monthName.slice(0, 3)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* 12 Months Grid: Responsive based on layoutMode */}
@@ -727,18 +805,24 @@ export const YearView: React.FC<YearViewProps> = ({
           {hoveredDay.day.colleagueVacations &&
             hoveredDay.day.colleagueVacations.length > 0 && (
               <div className="flex flex-col gap-0.5 pt-0.5 text-[10px]">
-                {hoveredDay.day.colleagueVacations.map((cv) => (
-                  <div
-                    key={cv.colleagueId + cv.vacationId}
-                    className="flex items-center gap-1.5 text-cyan-200"
-                  >
-                    <Palmtree className="w-3 h-3 text-cyan-300 shrink-0" strokeWidth={1.75} />
-                    <span>
-                      {cv.colleagueName}: отпуск (день {cv.dayIndex} из{' '}
-                      {cv.totalDays})
-                    </span>
-                  </div>
-                ))}
+                {hoveredDay.day.colleagueVacations.map((cv) => {
+                  const theme = getColleagueTheme(cv.colorTheme);
+                  return (
+                    <div
+                      key={cv.colleagueId + cv.vacationId}
+                      className="flex items-center gap-1.5 text-[#f3e7d5]"
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0 shadow-2xs"
+                        style={{ backgroundColor: theme.accentColor }}
+                      />
+                      <span>
+                        {cv.colleagueName}: отпуск (день {cv.dayIndex} из{' '}
+                        {cv.totalDays})
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

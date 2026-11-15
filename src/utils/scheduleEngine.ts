@@ -84,18 +84,35 @@ export function getColleagueVacationsForDate(
         occurrences.push({
           colleagueId: colleague.id,
           colleagueName: colleague.name,
+          role: colleague.role,
           vacationId: vac.id,
           startDate: vac.startDate,
           endDate: vac.endDate,
           dayIndex: dayIdx,
           totalDays: vac.daysCount,
           colorTheme: colleague.colorTheme || (colleague.id === 'lekha' ? 'orange' : 'blue'),
+          note: vac.note,
         });
       }
     }
   }
 
   return occurrences;
+}
+
+export function formatVacationDateRange(startDateStr: string, endDateStr: string): string {
+  const [y1, m1, d1] = startDateStr.split('-').map(Number);
+  const [y2, m2, d2] = endDateStr.split('-').map(Number);
+  const m1Name = RUSSIAN_MONTH_NAMES[m1 - 1]?.slice(0, 3).toLowerCase();
+  const m2Name = RUSSIAN_MONTH_NAMES[m2 - 1]?.slice(0, 3).toLowerCase();
+
+  if (y1 === y2) {
+    if (m1 === m2) {
+      return `${d1}–${d2} ${m1Name} ${y1}`;
+    }
+    return `${d1} ${m1Name} – ${d2} ${m2Name} ${y1}`;
+  }
+  return `${d1} ${m1Name} ${y1} – ${d2} ${m2Name} ${y2}`;
 }
 
 export function loadInitialColleagues(): Colleague[] {

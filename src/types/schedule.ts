@@ -113,12 +113,14 @@ export interface Colleague {
 export interface ColleagueVacationOccurrence {
   colleagueId: string;
   colleagueName: string;
+  role?: string;
   vacationId: string;
   startDate: string;
   endDate: string;
   dayIndex: number; // 1-based index (e.g. day 1 of 7)
   totalDays: number;
   colorTheme?: string;
+  note?: string;
 }
 
 export interface MonthStatistics {
