@@ -189,12 +189,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
             <div className="flex items-center gap-1">
               <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100] shrink-0" />
-              <span className="font-semibold text-[#7d5600]">Мой отпуск</span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb] shrink-0" />
-              <span className="font-semibold text-[#1e40af]">Отпуск коллег</span>
+              <span className="font-semibold text-[#7d5600]">Отпуск</span>
             </div>
           </div>
         </div>
