@@ -55,12 +55,12 @@ export const DayModal: React.FC<DayModalProps> = ({
   }[] = [
     {
       type: 'work',
-      label: 'Смена',
-      sublabel: 'Смена в ночь с 20:00 до 08:00',
-      dotColor: 'bg-[#1e6f9f]',
-      color: 'text-[#184260]',
-      border: 'border-[#bcd4e6]',
-      activeBg: 'bg-[#edf4f9] border-[#1e6f9f] ring-1 ring-[#1e6f9f]',
+      label: 'Работа',
+      sublabel: 'Плановая работа в ночь',
+      dotColor: 'bg-[#d32f2f]',
+      color: 'text-[#93231c]',
+      border: 'border-[#f5b8b2]',
+      activeBg: 'bg-[#fdeeed] border-[#d32f2f] ring-1 ring-[#d32f2f]',
     },
     {
       type: 'off',
@@ -74,11 +74,11 @@ export const DayModal: React.FC<DayModalProps> = ({
     {
       type: 'overtime',
       label: 'Подработка',
-      sublabel: 'Дополнительная смена с 20:00 до 08:00',
-      dotColor: 'bg-[#d32f2f]',
-      color: 'text-[#93231c]',
-      border: 'border-[#f5b8b2]',
-      activeBg: 'bg-[#fdeeed] border-[#d32f2f] ring-1 ring-[#d32f2f]',
+      sublabel: 'Дополнительная работа в ночь',
+      dotColor: 'bg-[#b71c1c]',
+      color: 'text-[#7f1d1d]',
+      border: 'border-[#e57373] border-dashed',
+      activeBg: 'bg-[#fbdcd9] border-[#b71c1c] ring-1 ring-[#b71c1c]',
     },
     {
       type: 'vacation',
@@ -138,11 +138,11 @@ export const DayModal: React.FC<DayModalProps> = ({
             Статус дня:{' '}
             <strong className="text-[#252320] font-semibold">
               {day.status === 'work'
-                ? 'Смена в ночь'
+                ? 'Работа'
                 : day.status === 'off'
                 ? 'Выходной'
                 : day.status === 'overtime'
-                ? 'Подработка в ночь'
+                ? 'Подработка'
                 : 'Отпуск'}
             </strong>
             {day.note && <p className="mt-2 text-xs text-[#81796e]">Заметка: {day.note}</p>}

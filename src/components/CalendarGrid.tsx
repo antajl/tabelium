@@ -182,13 +182,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   <span className={`w-2 h-2 rounded-full shrink-0 ${def.dotColor}`} />
                   <span className={`text-[11px] sm:text-xs font-semibold truncate ${def.colorText}`}>
                     <span className="sm:hidden">{def.shortLabel}</span>
-                    <span className="hidden sm:inline">
-                      {day.status === 'work'
-                        ? '20:00 — 08:00'
-                        : day.status === 'overtime'
-                        ? 'Подр. 20:00'
-                        : def.label}
-                    </span>
+                    <span className="hidden sm:inline">{def.label}</span>
                   </span>
                 </div>
 

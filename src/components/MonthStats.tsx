@@ -11,14 +11,13 @@ interface MonthStatsProps {
   stats: MonthStatistics;
   month: number;
   year: number;
-  config: UserScheduleConfig;
+  config?: UserScheduleConfig;
 }
 
 export const MonthStats: React.FC<MonthStatsProps> = ({
   stats,
   month,
   year,
-  config,
 }) => {
   const monthName = RUSSIAN_MONTH_NAMES[month - 1];
 
@@ -29,33 +28,33 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
           Сводка за {monthName} {year}
         </h3>
         <span className="text-xs text-[#81796e]">
-          Смены ({config.shiftStartTime} — {config.shiftEndTime}): <strong className="text-[#252320] font-bold tabular-nums">{stats.totalNightShifts}</strong>
+          Всего смен: <strong className="text-[#252320] font-bold tabular-nums">{stats.totalNightShifts}</strong>
         </span>
       </div>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
         {/* Regular Work */}
-        <div className="p-3 rounded-xl bg-[#edf4f9] border border-[#bcd4e6] flex flex-col justify-between shadow-2xs">
-          <div className="flex items-center justify-between text-[#184260] text-xs font-semibold">
-            <span>Основные смены</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-[#1e6f9f]" />
+        <div className="p-3 rounded-xl bg-[#fdeeed] border border-[#f5b8b2] flex flex-col justify-between shadow-2xs">
+          <div className="flex items-center justify-between text-[#93231c] text-xs font-semibold">
+            <span>Работа</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f]" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#184260]">{stats.workDaysCount}</span>
-            <span className="text-xs text-[#527a99]">смен</span>
+            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#93231c]">{stats.workDaysCount}</span>
+            <span className="text-xs text-[#b85a53]">дней</span>
           </div>
         </div>
 
         {/* Overtime */}
-        <div className="p-3 rounded-xl bg-[#fdeeed] border border-[#f5b8b2] flex flex-col justify-between shadow-2xs">
-          <div className="flex items-center justify-between text-[#93231c] text-xs font-semibold">
-            <span>Подработки</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f]" />
+        <div className="p-3 rounded-xl bg-[#fbdcd9] border border-[#e57373] border-dashed flex flex-col justify-between shadow-2xs">
+          <div className="flex items-center justify-between text-[#7f1d1d] text-xs font-semibold">
+            <span>Подработка</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#b71c1c]" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#93231c]">{stats.overtimeDaysCount}</span>
-            <span className="text-xs text-[#b85a53]">смен</span>
+            <span className="text-lg sm:text-xl font-bold tabular-nums text-[#7f1d1d]">{stats.overtimeDaysCount}</span>
+            <span className="text-xs text-[#9c3e37]">смен</span>
           </div>
         </div>
 

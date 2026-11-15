@@ -38,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
             <p className="text-xs text-[#81796e] truncate">
-              Смены в ночь: 20:00 — 08:00 • График 2/2
+              График 2/2 в ночь
             </p>
           </div>
         </div>

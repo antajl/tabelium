@@ -4,24 +4,22 @@ export const LegendBar: React.FC = () => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 py-2.5 px-3 sm:px-4 bg-[#fcfaf7] rounded-xl border border-[#e7ddcf] text-xs shadow-sm">
       <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-        {/* Смена */}
+        {/* Работа */}
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#1e6f9f] shrink-0" />
-          <span className="text-[#184260] font-semibold">Смена</span>
-          <span className="text-[#81796e] text-[11px]">(20:00 — 08:00)</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
+          <span className="text-[#93231c] font-semibold">Работа</span>
+        </div>
+
+        {/* Подработка */}
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#b71c1c] shrink-0 ring-1 ring-[#e57373]" />
+          <span className="text-[#7f1d1d] font-semibold">Подработка</span>
         </div>
 
         {/* Выходной */}
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#2e7d32] shrink-0" />
           <span className="text-[#215128] font-semibold">Выходной</span>
-        </div>
-
-        {/* Подработка */}
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
-          <span className="text-[#93231c] font-semibold">Подработка</span>
-          <span className="text-[#81796e] text-[11px]">(20:00)</span>
         </div>
 
         {/* Отпуск */}
