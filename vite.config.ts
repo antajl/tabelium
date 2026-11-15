@@ -12,6 +12,7 @@ export default defineConfig({
   ],
   server: {
     host: true, // доступно по локальной сети
-    port: 5173,
+    port: 5180, // отдельный порт, чтобы не конфликтовать с coursing-stats (5173)
+    allowedHosts: true, // разрешает доступ через *.trycloudflare.com
   },
 });
