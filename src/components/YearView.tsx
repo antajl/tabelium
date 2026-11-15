@@ -22,6 +22,7 @@ import { SHIFT_DEFINITIONS } from '../types/schedule';
 import {
   calculateYearStatistics,
   getYearMonthsData,
+  pluralize,
   RUSSIAN_DAY_OF_WEEK_SHORT,
   RUSSIAN_MONTH_NAMES,
 } from '../utils/scheduleEngine';

@@ -473,3 +473,25 @@ export function decodeSharePayload(hashStr: string): {
     return null;
   }
 }
+
+/**
+ * Склонение существительных и прилагательных по правилам русского языка
+ * @example pluralize(1, 'смена', 'смены', 'смен') => 'смена'
+ * @example pluralize(2, 'двойная', 'двойные', 'двойных') => 'двойные'
+ * @example pluralize(5, 'двойная', 'двойные', 'двойных') => 'двойных'
+ */
+export function pluralize(count: number, one: string, two: string, five: string): string {
+  const abs = Math.abs(count);
+  const mod100 = abs % 100;
+  const mod10 = abs % 10;
+  if (mod100 >= 11 && mod100 <= 19) {
+    return five;
+  }
+  if (mod10 === 1) {
+    return one;
+  }
+  if (mod10 >= 2 && mod10 <= 4) {
+    return two;
+  }
+  return five;
+}

@@ -152,6 +152,13 @@ export const App: React.FC = () => {
   const [activeTransitionMonth, setActiveTransitionMonth] = useState<number>(initialRoute.month);
   const [yearLayout] = useState<YearLayoutMode>('fit-screen');
 
+  const currentYearRef = useRef(currentYear);
+  currentYearRef.current = currentYear;
+  const currentMonthRef = useRef(currentMonth);
+  currentMonthRef.current = currentMonth;
+  const viewModeRef = useRef(viewMode);
+  viewModeRef.current = viewMode;
+
   const [config, setConfig] = useState<UserScheduleConfig>(() => {
     try {
       const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
@@ -230,10 +237,18 @@ export const App: React.FC = () => {
 
     const handlePopState = () => {
       const route = parseRoute(window.location.pathname, window.location.search);
-      setActiveTransitionMonth(route.month);
+      const isReturningToYearFromMonth =
+        viewModeRef.current === 'month' && route.view === 'year';
+      const targetMonth = isReturningToYearFromMonth
+        ? currentMonthRef.current
+        : route.month;
+
+      setActiveTransitionMonth(targetMonth);
       startMorphTransition(() => {
         setCurrentYear(route.year);
-        setCurrentMonth(route.month);
+        if (route.view === 'month') {
+          setCurrentMonth(route.month);
+        }
         setViewMode(route.view);
       });
     };
