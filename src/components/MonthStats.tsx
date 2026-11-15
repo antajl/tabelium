@@ -22,7 +22,10 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
   const monthName = RUSSIAN_MONTH_NAMES[month - 1];
 
   return (
-    <div className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-3.5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]">
+    <div
+      style={{ viewTransitionName: 'active-stats-surface' } as React.CSSProperties}
+      className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-3.5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]"
+    >
       {/* Compact Single Header Row */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#e7ddcf]">
         <div className="flex items-baseline gap-1.5 min-w-0">

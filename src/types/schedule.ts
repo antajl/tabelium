@@ -1,5 +1,7 @@
 export type ShiftType = 'work' | 'off' | 'overtime' | 'vacation';
 
+export type YearLayoutMode = 'compact-4x3' | 'rows-6x2' | 'fit-screen';
+
 export interface ShiftDefinition {
   type: ShiftType;
   label: string;

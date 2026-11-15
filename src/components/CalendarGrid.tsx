@@ -6,7 +6,7 @@ import {
   RotateCcw,
   X,
   FileText,
-  LayoutGrid,
+  ArrowLeft,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
@@ -141,19 +141,33 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   };
 
   return (
-    <div className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]">
+    <div
+      style={{ viewTransitionName: 'active-calendar-surface' } as React.CSSProperties}
+      className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]"
+    >
       {/* Single Horizontal Toolbar Line */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf]">
-        {/* Left: Navigation, Dropdown, Divider, Inline Legend */}
+        {/* Left: Back to Year, Navigation, Dropdown, Divider, Inline Legend */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Month & Year Navigation */}
-          <div className="flex items-center gap-1">
+          {onBackToYear && (
+            <button
+              onClick={onBackToYear}
+              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-xs font-semibold text-[#7b511c] transition shadow-2xs active:scale-95 cursor-pointer"
+              title={`Вернуться к обзору ${year} года`}
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={2} />
+              <span>← {year} год</span>
+            </button>
+          )}
+
+          {/* Month & Year Navigation (Unified Segmented Control, exact h-8 height) */}
+          <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs">
             <button
               onClick={onPrevMonth}
-              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95 cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded text-[#81796e] hover:text-[#252320] hover:bg-white transition active:scale-95 cursor-pointer"
               title="Предыдущий месяц"
             >
-              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
 
             <MonthYearDropdown
@@ -165,55 +179,44 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
             <button
               onClick={onNextMonth}
-              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95 cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded text-[#81796e] hover:text-[#252320] hover:bg-white transition active:scale-95 cursor-pointer"
               title="Следующий месяц"
             >
-              <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
           </div>
 
           <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block mx-1" />
 
           {/* Inline Legend (On the exact same row) */}
-          <div className="flex items-center gap-2.5 text-xs flex-wrap">
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
+          <div className="flex items-center gap-3 text-xs flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#d32f2f] shrink-0" />
               <span className="font-semibold text-[#93231c]">Работа</span>
             </div>
 
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
               <span className="font-semibold text-[#7f1d1d]">Подработка</span>
             </div>
 
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2e7d32] shrink-0" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#2e7d32] shrink-0" />
               <span className="font-semibold text-[#215128]">Выходной</span>
             </div>
 
-            <div className="flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100] shrink-0" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#e5a100] shrink-0" />
               <span className="font-semibold text-[#7d5600]">Отпуск</span>
             </div>
           </div>
         </div>
 
-        {/* Right: Actions (Back to Year & Today Button) */}
+        {/* Right: Actions (Today Button, exact h-8 height) */}
         <div className="flex items-center gap-2 ml-auto">
-          {onBackToYear && (
-            <button
-              onClick={onBackToYear}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
-              title="Вернуться к годовому календарю"
-            >
-              <LayoutGrid className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
-              <span>Весь год</span>
-            </button>
-          )}
-
           <button
             onClick={onJumpToday}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-[#736b60] hover:text-[#252320] text-xs font-medium shadow-2xs transition active:scale-95 cursor-pointer"
             title="Перейти к текущему дню"
           >
             <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
@@ -239,13 +242,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         })}
       </div>
 
-      {/* Days Grid - Clean Square Cells */}
+      {/* Days Grid - Clean Horizontal Rectangular Cells (No Vertical Scroll) */}
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {/* Transparent blank slots */}
         {Array.from({ length: blankDaysCount }).map((_, i) => (
           <div
             key={`blank-${i}`}
-            className="aspect-square min-h-[64px] sm:min-h-[82px] md:min-h-[92px] rounded-xl opacity-0 pointer-events-none"
+            className="h-[58px] sm:h-[68px] lg:h-[74px] xl:h-[78px] rounded-xl opacity-0 pointer-events-none"
           />
         ))}
 
@@ -260,7 +263,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               onMouseDown={(e) => handleCellMouseDown(day, e)}
               onMouseEnter={() => handleCellMouseEnter(day)}
               onMouseUp={(e) => handleCellMouseUp(day, e)}
-              className={`relative flex flex-col justify-between aspect-square min-h-[64px] sm:min-h-[82px] md:min-h-[92px] p-2 sm:p-2.5 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
+              className={`relative flex flex-col justify-between h-[58px] sm:h-[68px] lg:h-[74px] xl:h-[78px] p-1.5 sm:p-2 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
                 def.colorBg
               } ${def.colorBorder} ${
                 isInActiveRange

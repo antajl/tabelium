@@ -64,11 +64,11 @@ export const MonthYearDropdown: React.FC<MonthYearDropdownProps> = ({
 
   return (
     <div className={`relative inline-block ${className}`} ref={dropdownRef}>
-      {/* Capsule Trigger Button */}
+      {/* Trigger Button inside segmented control */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-[#fcfaf7] border border-[#e7ddcf] hover:border-[#d8b57a] text-xs sm:text-sm font-semibold text-[#252320] shadow-2xs transition-all cursor-pointer active:scale-95"
+        className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-transparent hover:bg-white text-xs sm:text-sm font-bold text-[#252320] transition-all cursor-pointer active:scale-95"
         title="Выбрать месяц и год"
       >
         <span className="tabular-nums">{triggerLabel}</span>

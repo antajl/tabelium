@@ -3,17 +3,15 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
-  ExternalLink,
   Coins,
-  AlertCircle,
   Clock,
-  Sparkles,
 } from 'lucide-react';
 import type {
   Colleague,
   DayOverride,
   DayShiftInfo,
   UserScheduleConfig,
+  YearLayoutMode,
 } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
 import {
@@ -30,6 +28,8 @@ interface YearViewProps {
   overrides: Record<string, DayOverride>;
   colleagues: Colleague[];
   isReadOnly: boolean;
+  layoutMode?: YearLayoutMode;
+  activeTransitionMonth?: number;
   onSelectYear: (year: number) => void;
   onJumpToday: () => void;
   onOpenMonth: (month: number) => void;
@@ -42,16 +42,28 @@ export const YearView: React.FC<YearViewProps> = ({
   overrides,
   colleagues,
   isReadOnly: _isReadOnly,
+  layoutMode = 'fit-screen',
+  activeTransitionMonth,
   onSelectYear,
   onJumpToday,
   onOpenMonth,
   onSelectDay,
 }) => {
   const [selectedColleagueFilter, setSelectedColleagueFilter] = useState<string | null>(null);
+  const [expandingMonth, setExpandingMonth] = useState<number | null>(null);
   const [hoveredDay, setHoveredDay] = useState<{
     day: DayShiftInfo;
     rect: DOMRect;
   } | null>(null);
+
+  const handleMonthClick = (m: number) => {
+    if (expandingMonth !== null) return;
+    setExpandingMonth(m);
+    setTimeout(() => {
+      onOpenMonth(m);
+      setExpandingMonth(null);
+    }, 220);
+  };
 
   // Compute all 12 months data
   const monthsData = useMemo(() => {
@@ -97,128 +109,133 @@ export const YearView: React.FC<YearViewProps> = ({
 
   const yearsRange = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Top Bar: Year Navigator & Quick Filters */}
-      <div className="bg-white rounded-2xl border border-[#e7ddcf] p-3 sm:p-4 shadow-[0_2px_8px_rgba(45,30,15,0.03)] flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Left: Year Switcher */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onSelectYear(year - 1)}
-              title="Предыдущий год"
-              className="p-1.5 rounded-lg border border-[#e7ddcf] bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] transition active:scale-95"
-            >
-              <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
-            </button>
+  // Determine layout-specific parameters
+  const isFitScreen = layoutMode === 'fit-screen';
+  const is6x2 = layoutMode === 'rows-6x2';
 
-            {/* Year selector */}
-            <div className="relative">
-              <select
-                value={year}
-                onChange={(e) => onSelectYear(Number(e.target.value))}
-                className="appearance-none px-3.5 py-1.5 pr-7 font-bold text-base sm:text-lg text-[#252320] bg-[#fbf8f3] border border-[#d8b57a] rounded-xl cursor-pointer hover:border-[#b68231] transition focus:outline-none focus:ring-2 focus:ring-[#b68231]/30"
+  return (
+    <div
+      className={
+        isFitScreen
+          ? 'h-full flex flex-col justify-between gap-2 overflow-hidden'
+          : 'flex flex-col gap-3 sm:gap-3.5'
+      }
+    >
+      {/* Unified Year Control & Statistics Card */}
+      <div
+        style={{ viewTransitionName: 'active-stats-surface' } as React.CSSProperties}
+        className="bg-white rounded-xl border border-[#e7ddcf] p-2 sm:p-2.5 gap-2 shadow-[0_2px_8px_rgba(45,30,15,0.03)] flex flex-col shrink-0"
+      >
+        {/* Top Control Line: Year Switcher, Colleague Vacation Filters, Hours Worked */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-3">
+          {/* Left: Year Switcher (Unified segmented control, exact h-8 height) */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs">
+              <button
+                onClick={() => onSelectYear(year - 1)}
+                title="Предыдущий год"
+                className="w-7 h-7 flex items-center justify-center rounded text-[#81796e] hover:text-[#252320] hover:bg-white transition active:scale-95 cursor-pointer"
               >
-                {yearsRange.map((y) => (
-                  <option key={y} value={y}>
-                    {y} год
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#7b511c]">
-                <ChevronRight className="w-3.5 h-3.5 rotate-90" strokeWidth={1.5} />
+                <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
+              </button>
+
+              <div className="relative">
+                <select
+                  value={year}
+                  onChange={(e) => onSelectYear(Number(e.target.value))}
+                  className="appearance-none h-7 px-2.5 pr-5.5 font-bold text-sm text-[#252320] bg-transparent hover:bg-white rounded cursor-pointer transition focus:outline-none focus:ring-1 focus:ring-[#b68231]"
+                >
+                  {yearsRange.map((y) => (
+                    <option key={y} value={y}>
+                      {y} год
+                    </option>
+                  ))}
+                </select>
+                <ChevronRight className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-90 text-[#81796e]" strokeWidth={1.75} />
               </div>
+
+              <button
+                onClick={() => onSelectYear(year + 1)}
+                title="Следующий год"
+                className="w-7 h-7 flex items-center justify-center rounded text-[#81796e] hover:text-[#252320] hover:bg-white transition active:scale-95 cursor-pointer"
+              >
+                <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+              </button>
             </div>
 
             <button
-              onClick={() => onSelectYear(year + 1)}
-              title="Следующий год"
-              className="p-1.5 rounded-lg border border-[#e7ddcf] bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] transition active:scale-95"
+              onClick={onJumpToday}
+              className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-xs font-medium text-[#736b60] hover:text-[#252320] transition shadow-2xs active:scale-95 cursor-pointer"
+              title="Перейти к текущему году"
             >
-              <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+              <RotateCcw className="w-3 h-3 text-[#b68231]" strokeWidth={1.75} />
+              <span className="hidden sm:inline">Текущий год</span>
             </button>
           </div>
 
-          <button
-            onClick={onJumpToday}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#7b511c] border border-[#d8b57a] transition shadow-2xs active:scale-95"
-          >
-            <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
-            <span className="hidden sm:inline">Текущий год</span>
-          </button>
-        </div>
+          {/* Middle: Colleague Vacation Filter (Unified segmented group, no floating pills) */}
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] text-[#81796e] font-medium mr-1 hidden sm:inline">
+              Отпуска:
+            </span>
 
-        {/* Right: Colleagues Filter Pills & Legend */}
-        <div className="flex flex-wrap items-center justify-center md:justify-end gap-1.5">
-          <span className="text-[11px] text-[#81796e] font-medium mr-1 hidden lg:inline">
-            Отпуска:
-          </span>
-
-          <button
-            onClick={() => setSelectedColleagueFilter(null)}
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition active:scale-95 ${
-              selectedColleagueFilter === null
-                ? 'bg-[#252320] text-white border-[#252320] shadow-2xs'
-                : 'bg-[#fcfaf7] text-[#736b60] border-[#e7ddcf] hover:bg-[#f7f2ea]'
-            }`}
-          >
-            Все (365 дней)
-          </button>
-
-          {colleagues.map((c) => {
-            const theme = getColleagueTheme(c.colorTheme, c.isSelf);
-            const isSelected = selectedColleagueFilter === c.id;
-            const daysCount = colleagueVacationDayCounts[c.id] || 0;
-            return (
+            <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs text-xs overflow-x-auto max-w-full">
               <button
-                key={c.id}
-                onClick={() =>
-                  setSelectedColleagueFilter(isSelected ? null : c.id)
-                }
-                title={`Подсветить отпуска: ${c.name} (${daysCount} дн. в ${year} г.)`}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition active:scale-95 ${
-                  isSelected
-                    ? `${theme.badgeBg} ${theme.badgeBorder} ${theme.badgeText} ring-2 ring-offset-1 ring-[#b68231]`
-                    : `${theme.itemBg} ${theme.itemBorder} ${theme.itemText} hover:opacity-85`
+                onClick={() => setSelectedColleagueFilter(null)}
+                className={`h-7 px-2.5 rounded-md font-medium transition cursor-pointer shrink-0 ${
+                  selectedColleagueFilter === null
+                    ? 'bg-white text-[#252320] shadow-xs font-semibold'
+                    : 'text-[#81796e] hover:text-[#252320]'
                 }`}
               >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: theme.accentColor }}
-                />
-                <span>{c.name}</span>
-                <span className="text-[10px] opacity-75 font-normal">
-                  {daysCount} дн.
-                </span>
+                Все (365 дн.)
               </button>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Year Statistics Ribbon */}
-      <div className="bg-white rounded-2xl border border-[#e7ddcf] p-3 sm:p-4 shadow-[0_2px_8px_rgba(45,30,15,0.03)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#b68231]" strokeWidth={1.5} />
-            <h2 className="text-xs sm:text-sm font-bold text-[#252320] uppercase tracking-wide">
-              Сводка за {year} год
-            </h2>
+              {colleagues.map((c) => {
+                const theme = getColleagueTheme(c.colorTheme, c.isSelf);
+                const isSelected = selectedColleagueFilter === c.id;
+                const daysCount = colleagueVacationDayCounts[c.id] || 0;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() =>
+                      setSelectedColleagueFilter(isSelected ? null : c.id)
+                    }
+                    title={`Подсветить отпуска: ${c.name} (${daysCount} дн. в ${year} г.)`}
+                    className={`h-7 px-2.5 rounded-md font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                      isSelected
+                        ? 'bg-white text-[#252320] shadow-xs font-semibold ring-1 ring-[#b68231]'
+                        : 'text-[#81796e] hover:text-[#252320]'
+                    }`}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: theme.accentColor }}
+                    />
+                    <span>{c.name}</span>
+                    <span className="text-[10px] opacity-60 tabular-nums">
+                      {daysCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <div className="inline-flex items-center gap-1.5 text-[#81796e]">
+          {/* Right: Hours & Earnings (Clean text without heavy badges) */}
+          <div className="flex items-center gap-3 text-xs text-[#81796e] shrink-0">
+            <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
               <span>
-                Отработано: <strong className="text-[#252320]">{yearStats.estimatedHours} ч.</strong>
-                <span className="text-[11px] opacity-75 ml-1">
-                  (ночных: {yearStats.estimatedNightHours} ч.)
+                Отработано: <strong className="text-[#252320] font-bold tabular-nums">{yearStats.estimatedHours} ч.</strong>
+                <span className="text-[11px] opacity-70 ml-1">
+                  (ночных {yearStats.estimatedNightHours} ч.)
                 </span>
               </span>
             </div>
 
             {yearStats.estimatedPay !== undefined && yearStats.estimatedPay > 0 && (
-              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f3e7d5] border border-[#d8b57a] text-[#7b511c] font-bold">
+              <div className="flex items-center gap-1 font-bold text-[#7b511c]">
                 <Coins className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
                 <span>{yearStats.estimatedPay.toLocaleString('ru-RU')} ₽</span>
               </div>
@@ -226,93 +243,105 @@ export const YearView: React.FC<YearViewProps> = ({
           </div>
         </div>
 
-        {/* Stat badges row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 text-xs">
-          <div className="p-2 rounded-xl bg-[#fdeeed] border border-[#f5b8b2] flex items-center justify-between">
-            <span className="text-[#93231c] font-semibold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#d32f2f]" /> Работа
-            </span>
-            <strong className="text-[#93231c] tabular-nums font-bold">
-              {yearStats.workDaysCount} смен
-            </strong>
+        {/* Bottom Row: Clean Metrics Row (No nested pill boxes, just clean numbers & dots) */}
+        <div className="flex flex-wrap items-center justify-between gap-y-1.5 gap-x-4 pt-2 border-t border-[#f2ede4] text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#d32f2f] shrink-0" />
+            <span className="text-[#81796e]">Работа:</span>
+            <strong className="text-[#252320] font-bold tabular-nums">{yearStats.workDaysCount} смен</strong>
           </div>
 
-          <div className="p-2 rounded-xl bg-[#eaf5ec] border border-[#b8deb9] flex items-center justify-between">
-            <span className="text-[#215128] font-semibold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2e7d32]" /> Выходные
-            </span>
-            <strong className="text-[#215128] tabular-nums font-bold">
-              {yearStats.offDaysCount} дн.
-            </strong>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#2e7d32] shrink-0" />
+            <span className="text-[#81796e]">Выходные:</span>
+            <strong className="text-[#252320] font-bold tabular-nums">{yearStats.offDaysCount} дн.</strong>
           </div>
 
-          <div className="p-2 rounded-xl bg-[#fef7db] border border-[#f6dc84] flex items-center justify-between">
-            <span className="text-[#7d5600] font-semibold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#e5a100]" /> Мой отпуск
-            </span>
-            <strong className="text-[#7d5600] tabular-nums font-bold">
-              {yearStats.vacationDaysCount} дн.
-            </strong>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#e5a100] shrink-0" />
+            <span className="text-[#81796e]">Мой отпуск:</span>
+            <strong className="text-[#252320] font-bold tabular-nums">{yearStats.vacationDaysCount} дн.</strong>
           </div>
 
           {yearStats.overtimeDaysCount > 0 && (
-            <div className="p-2 rounded-xl bg-[#fbdcd9] border border-[#e57373] border-dashed flex items-center justify-between">
-              <span className="text-[#7f1d1d] font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#b71c1c]" /> Подработка
-              </span>
-              <strong className="text-[#7f1d1d] tabular-nums font-bold">
-                {yearStats.overtimeDaysCount} смен
-              </strong>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
+              <span className="text-[#81796e]">Подработка:</span>
+              <strong className="text-[#252320] font-bold tabular-nums">{yearStats.overtimeDaysCount} смен</strong>
             </div>
           )}
 
           {yearStats.doublePayShiftsCount > 0 && (
-            <div className="p-2 rounded-xl bg-[#fbf4f0] border border-[#efc8b4] flex items-center justify-between">
-              <span className="text-[#9d4c37] font-semibold flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-[#9d4c37]" strokeWidth={1.5} />
-                Оплата 2X
-              </span>
-              <strong className="text-[#9d4c37] tabular-nums font-bold">
-                {yearStats.doublePayShiftsCount} смен
-              </strong>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#9d4c37] shrink-0" />
+              <span className="text-[#81796e]">Оплата 2X:</span>
+              <strong className="text-[#252320] font-bold tabular-nums">{yearStats.doublePayShiftsCount} смен</strong>
             </div>
           )}
         </div>
       </div>
 
-      {/* 12 Months Grid (4 cols on xl, 3 on lg, 2 on md, 1 on sm) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+      {/* 12 Months Grid: Responsive based on layoutMode */}
+      <div
+        className={
+          isFitScreen
+            ? 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-12 md:grid-rows-6 lg:grid-rows-4 xl:grid-rows-3 gap-2 overflow-hidden'
+            : is6x2
+            ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2'
+            : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5'
+        }
+      >
         {monthsData.map((mData) => {
           const firstDayOfWeek = mData.days.length > 0 ? mData.days[0].dayOfWeek : 1;
           const blankDaysCount = firstDayOfWeek - 1;
+          const isExpanding = expandingMonth === mData.month;
+          const isTransitionTarget = mData.month === (activeTransitionMonth ?? 1);
 
           return (
             <div
               key={mData.month}
-              className="bg-white rounded-2xl border border-[#e7ddcf] p-3 shadow-[0_2px_8px_rgba(45,30,15,0.03)] hover:shadow-md transition flex flex-col justify-between"
+              style={{
+                viewTransitionName: isTransitionTarget ? 'active-calendar-surface' : undefined,
+              } as React.CSSProperties}
+              onClick={(e) => {
+                // If clicked directly on the month card container (not on a day button)
+                if ((e.target as HTMLElement).closest('button[data-day]')) return;
+                handleMonthClick(mData.month);
+              }}
+              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer ${
+                isFitScreen
+                  ? 'h-full min-h-0 p-1.5 sm:p-2 overflow-hidden'
+                  : 'p-2 sm:p-2.5'
+              } ${
+                isExpanding
+                  ? 'bg-white scale-[1.04] shadow-2xl ring-4 ring-[#b68231] border-[#b68231] z-30 opacity-90'
+                  : 'bg-white border border-[#e7ddcf] shadow-[0_2px_8px_rgba(45,30,15,0.03)] hover:shadow-lg hover:border-[#d8b57a] hover:scale-[1.01]'
+              }`}
             >
               {/* Month Header */}
-              <div className="flex items-center justify-between gap-1 mb-2 pb-1.5 border-b border-[#f2ede4]">
-                <button
-                  onClick={() => onOpenMonth(mData.month)}
-                  className="group flex items-center gap-1.5 text-left font-bold text-sm text-[#252320] hover:text-[#b68231] transition"
-                  title={`Перейти к просмотру месяца: ${mData.monthName}`}
-                >
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMonthClick(mData.month);
+                }}
+                className="group/mhdr flex items-center justify-between gap-1 border-b border-[#f2ede4] cursor-pointer shrink-0 mb-1 pb-1"
+                title={`Кликните, чтобы открыть ${mData.monthName}`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-[#252320] group-hover/mhdr:text-[#b68231] transition">
                   <span>{mData.monthName}</span>
-                  <ExternalLink
-                    className="w-3 h-3 text-[#81796e] group-hover:text-[#b68231] transition opacity-0 group-hover:opacity-100"
-                    strokeWidth={1.5}
-                  />
-                </button>
+                </div>
 
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fdeeed] text-[#93231c] border border-[#f5b8b2]/60">
-                    {mData.stats.workDaysCount} см.
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span
+                    className="text-[10px] sm:text-[11px] font-semibold text-[#81796e] tabular-nums"
+                    title={`Всего смен: ${mData.stats.workDaysCount + mData.stats.overtimeDaysCount} (основных: ${mData.stats.workDaysCount}, подработок: ${mData.stats.overtimeDaysCount})`}
+                  >
+                    {mData.stats.workDaysCount + mData.stats.overtimeDaysCount} см.
                   </span>
                   {mData.stats.doublePayShiftsCount > 0 && (
                     <span
                       title={`${mData.stats.doublePayShiftsCount} смен с 2X оплатой`}
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4]"
+                      className="text-[9px] sm:text-[10px] font-bold text-[#9d4c37] tabular-nums"
                     >
                       2X: {mData.stats.doublePayShiftsCount}
                     </span>
@@ -321,7 +350,7 @@ export const YearView: React.FC<YearViewProps> = ({
               </div>
 
               {/* Day of Week Row */}
-              <div className="grid grid-cols-7 gap-1 text-[10px] font-bold text-[#81796e]/80 text-center mb-1">
+              <div className="grid grid-cols-7 text-[9px] sm:text-[10px] font-bold text-[#81796e]/80 text-center shrink-0 mb-0.5 gap-0.5">
                 {RUSSIAN_DAY_OF_WEEK_SHORT.map((dow, idx) => (
                   <span
                     key={dow}
@@ -333,10 +362,23 @@ export const YearView: React.FC<YearViewProps> = ({
               </div>
 
               {/* Calendar Grid for this month */}
-              <div className="grid grid-cols-7 gap-1">
+              <div
+                className={
+                  isFitScreen
+                    ? 'flex-1 min-h-0 grid grid-cols-7 grid-rows-6 gap-0.5'
+                    : 'grid grid-cols-7 gap-0.5 sm:gap-1'
+                }
+              >
                 {/* Blanks */}
                 {Array.from({ length: blankDaysCount }).map((_, i) => (
-                  <div key={`blank-${i}`} className="aspect-square" />
+                  <div
+                    key={`blank-${i}`}
+                    className={
+                      isFitScreen
+                        ? 'h-full min-h-0'
+                        : 'aspect-[1/0.8]'
+                    }
+                  />
                 ))}
 
                 {/* Days */}
@@ -360,7 +402,9 @@ export const YearView: React.FC<YearViewProps> = ({
                   return (
                     <button
                       key={day.dateStr}
+                      data-day="true"
                       onClick={(e) => {
+                        e.stopPropagation();
                         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                         onSelectDay(day, rect);
                       }}
@@ -372,21 +416,29 @@ export const YearView: React.FC<YearViewProps> = ({
                       title={`${day.dateStr} — ${shiftDef.label}${
                         day.holidayName ? ` (${day.holidayName})` : ''
                       }`}
-                      className={`aspect-square rounded-lg p-0.5 flex flex-col items-center justify-between text-[11px] font-medium border relative transition cursor-pointer active:scale-95 ${
+                      className={`${
+                        isFitScreen
+                          ? 'h-full min-h-0 rounded p-0.5'
+                          : 'aspect-[1/0.8] rounded p-0.5'
+                      } flex flex-col items-center justify-between text-[10px] font-medium border relative transition cursor-pointer active:scale-95 ${
                         shiftDef.colorBg
                       } ${shiftDef.colorBorder} ${shiftDef.colorText} ${
+                        day.isPast && !day.isToday
+                          ? 'opacity-60 grayscale-[30%] hover:opacity-100 hover:grayscale-0'
+                          : ''
+                      } ${
                         day.isToday
-                          ? 'ring-2 ring-[#252320] ring-offset-1 font-bold z-10'
+                          ? 'ring-2 ring-[#b68231] outline outline-1 outline-[#b68231] outline-offset-1 font-bold z-10 !opacity-100 !grayscale-0'
                           : ''
                       } ${
                         matchesFilter
                           ? 'ring-2 ring-[#b68231] ring-offset-1 font-bold scale-105 z-10 shadow-xs'
                           : ''
-                      } ${isFaded ? 'opacity-35' : 'opacity-100 hover:scale-105 hover:z-10'}`}
+                      } ${isFaded ? 'opacity-35 grayscale-[50%]' : 'hover:scale-105 hover:z-10'}`}
                     >
                       {/* Day number & 2X marker */}
                       <div className="w-full flex items-center justify-between leading-none px-0.5">
-                        <span className="text-[10px]">{day.dayNumber}</span>
+                        <span className="text-[9px] sm:text-[10px]">{day.dayNumber}</span>
                         {day.isDoublePay && (
                           <span
                             className="text-[7px] font-black text-[#9d4c37] leading-none"

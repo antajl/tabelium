@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import type {
   Colleague,
   DayOverride,
   DayShiftInfo,
   ShiftType,
   UserScheduleConfig,
+  YearLayoutMode,
 } from './types/schedule';
 import {
   addDaysToDate,
@@ -31,15 +33,129 @@ const CONFIG_STORAGE_KEY = 'smenograf_config_v1';
 const OVERRIDES_STORAGE_KEY = 'smenograf_overrides_v1';
 const COLLEAGUES_STORAGE_KEY = 'smenograf_colleagues_v1';
 
+function parseRoute(
+  pathname: string,
+  search: string
+): { view: 'month' | 'year'; year: number; month: number } {
+  const now = new Date();
+  const defaultYear = now.getFullYear();
+  const defaultMonth = now.getMonth() + 1;
+
+  if (typeof window === 'undefined') {
+    return { view: 'year', year: defaultYear, month: defaultMonth };
+  }
+
+  // 1. Path-based routing: /YYYY or /YYYY/MM (e.g. /2025, /2026, /2026/10, /2026/05, /2026/5)
+  const cleanPath = pathname.replace(/^\/+|\/+$/g, '');
+  if (cleanPath) {
+    const parts = cleanPath.split('/');
+    // Format /YYYY
+    if (parts.length === 1 && /^\d{4}$/.test(parts[0])) {
+      const year = parseInt(parts[0], 10);
+      if (year >= 1970 && year <= 2100) {
+        return { view: 'year', year, month: defaultMonth };
+      }
+    }
+    // Format /YYYY/MM
+    if (parts.length === 2 && /^\d{4}$/.test(parts[0]) && /^\d{1,2}$/.test(parts[1])) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      if (year >= 1970 && year <= 2100 && month >= 1 && month <= 12) {
+        return { view: 'month', year, month };
+      }
+    }
+  }
+
+  // 2. Backward compatibility fallback for legacy query strings ?year=YYYY&month=M
+  if (search) {
+    const params = new URLSearchParams(search);
+    const yearParam = params.get('year');
+    const monthParam = params.get('month');
+    const viewParam = params.get('view');
+
+    const year = yearParam ? parseInt(yearParam, 10) || defaultYear : defaultYear;
+    const month = monthParam
+      ? Math.min(12, Math.max(1, parseInt(monthParam, 10) || defaultMonth))
+      : defaultMonth;
+    const view: 'month' | 'year' = monthParam
+      ? 'month'
+      : viewParam === 'month'
+      ? 'month'
+      : 'year';
+
+    return { view, year, month };
+  }
+
+  return { view: 'year', year: defaultYear, month: defaultMonth };
+}
+
+function formatRouteUrl(view: 'month' | 'year', year: number, month: number): string {
+  if (view === 'month') {
+    const mStr = String(month).padStart(2, '0');
+    return `/${year}/${mStr}`;
+  }
+  return `/${year}`;
+}
+
+function updateBrowserUrl(
+  view: 'month' | 'year',
+  year: number,
+  month: number,
+  replace = false
+) {
+  if (typeof window === 'undefined') return;
+  const targetPath = formatRouteUrl(view, year, month);
+  const targetUrl = targetPath + window.location.hash;
+
+  const currentPathWithHash = window.location.pathname + window.location.hash;
+  if (currentPathWithHash === targetUrl && !window.location.search) {
+    return;
+  }
+
+  const stateObj = { view, year, month };
+  if (replace) {
+    window.history.replaceState(stateObj, '', targetUrl);
+  } else {
+    window.history.pushState(stateObj, '', targetUrl);
+  }
+}
+
+function startMorphTransition(updateCallback: () => void) {
+  if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+    (document as any).startViewTransition(() => {
+      flushSync(() => {
+        updateCallback();
+      });
+    });
+  } else {
+    updateCallback();
+  }
+}
+
 export const App: React.FC = () => {
-  const today = new Date();
-  const [currentYear, setCurrentYear] = useState<number>(() => {
-    return today.getFullYear();
+  const initialRoute = useRef(
+    parseRoute(
+      typeof window !== 'undefined' ? window.location.pathname : '',
+      typeof window !== 'undefined' ? window.location.search : ''
+    )
+  ).current;
+  const [currentYear, setCurrentYear] = useState<number>(initialRoute.year);
+  const [currentMonth, setCurrentMonth] = useState<number>(initialRoute.month);
+  const [viewMode, setViewMode] = useState<'month' | 'year'>(initialRoute.view);
+  const [activeTransitionMonth, setActiveTransitionMonth] = useState<number>(initialRoute.month);
+  const [yearLayout, setYearLayout] = useState<YearLayoutMode>(() => {
+    try {
+      localStorage.setItem('smenograf_year_layout', 'fit-screen');
+    } catch {}
+    return 'fit-screen';
   });
-  const [currentMonth, setCurrentMonth] = useState<number>(() => {
-    return today.getMonth() + 1; // 1-12
-  });
-  const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
+
+  const handleYearLayoutChange = (mode: YearLayoutMode) => {
+    setYearLayout(mode);
+    try {
+      localStorage.setItem('smenograf_year_layout', mode);
+    } catch {}
+  };
 
   const [config, setConfig] = useState<UserScheduleConfig>(() => {
     try {
@@ -103,6 +219,25 @@ export const App: React.FC = () => {
   const [isExportImportOpen, setIsExportImportOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    updateBrowserUrl(viewMode, currentYear, currentMonth, true);
+
+    const handlePopState = () => {
+      const route = parseRoute(window.location.pathname, window.location.search);
+      setActiveTransitionMonth(route.month);
+      startMorphTransition(() => {
+        setCurrentYear(route.year);
+        setCurrentMonth(route.month);
+        setViewMode(route.view);
+      });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
     const hash = window.location.hash;
     if (hash && hash.includes('#share=')) {
       const sharedData = decodeSharePayload(hash);
@@ -153,28 +288,80 @@ export const App: React.FC = () => {
   const monthDays = getMonthDays(currentYear, currentMonth, config, overrides, colleagues);
   const monthStats = calculateMonthStatistics(monthDays, config);
 
-  const handlePrevMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
+  const handleOpenMonthFromYear = (month: number) => {
+    setActiveTransitionMonth(month);
+    updateBrowserUrl('month', currentYear, month, false);
+    startMorphTransition(() => {
+      setCurrentMonth(month);
+      setViewMode('month');
+    });
+  };
+
+  const handleBackToYear = () => {
+    setActiveTransitionMonth(currentMonth);
+    updateBrowserUrl('year', currentYear, currentMonth, false);
+    startMorphTransition(() => {
+      setViewMode('year');
+    });
+  };
+
+  const handleGoHome = () => {
+    if (viewMode === 'year') {
+      const now = new Date();
+      const thisYear = now.getFullYear();
+      if (currentYear !== thisYear) {
+        handleSelectYear(thisYear);
+      }
+      return;
     }
+    handleBackToYear();
+  };
+
+  const handleSelectYear = (newYear: number) => {
+    setCurrentYear(newYear);
+    updateBrowserUrl(viewMode, newYear, currentMonth, false);
+  };
+
+  const handleSelectMonth = (newMonth: number) => {
+    setCurrentMonth(newMonth);
+    setActiveTransitionMonth(newMonth);
+    updateBrowserUrl('month', currentYear, newMonth, false);
+  };
+
+  const handlePrevMonth = () => {
+    let newM = currentMonth - 1;
+    let newY = currentYear;
+    if (newM === 0) {
+      newM = 12;
+      newY = currentYear - 1;
+    }
+    setCurrentMonth(newM);
+    setCurrentYear(newY);
+    setActiveTransitionMonth(newM);
+    updateBrowserUrl('month', newY, newM, false);
   };
 
   const handleNextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
+    let newM = currentMonth + 1;
+    let newY = currentYear;
+    if (newM === 13) {
+      newM = 1;
+      newY = currentYear + 1;
     }
+    setCurrentMonth(newM);
+    setCurrentYear(newY);
+    setActiveTransitionMonth(newM);
+    updateBrowserUrl('month', newY, newM, false);
   };
 
   const handleJumpToday = () => {
     const now = new Date();
-    setCurrentYear(now.getFullYear());
-    setCurrentMonth(now.getMonth() + 1);
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    setCurrentYear(y);
+    setCurrentMonth(m);
+    setActiveTransitionMonth(m);
+    updateBrowserUrl(viewMode, y, m, false);
   };
 
   const handleSaveDay = (dateStr: string, status: ShiftType, note?: string) => {
@@ -281,14 +468,22 @@ export const App: React.FC = () => {
         scheduleName={config.scheduleName}
         isReadOnly={isReadOnly}
         viewMode={viewMode}
-        onChangeViewMode={setViewMode}
+        yearLayout={yearLayout}
+        onChangeYearLayout={handleYearLayoutChange}
+        onGoHome={handleGoHome}
         onOpenShare={() => setIsShareModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onExportImport={() => setIsExportImportOpen(true)}
         onExitReadOnly={handleExitReadOnly}
       />
 
-      <main className="flex-1 max-w-[1700px] w-full mx-auto px-4 py-3 sm:px-6 lg:px-8">
+      <main
+        className={`flex-1 max-w-[1700px] w-full mx-auto px-3 sm:px-6 lg:px-8 ${
+          viewMode === 'year'
+            ? 'py-2 h-[calc(100vh-53px)] overflow-hidden flex flex-col'
+            : 'py-3'
+        }`}
+      >
         {viewMode === 'month' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             {/* Left Column: Calendar (8 cols on lg) */}
@@ -300,10 +495,11 @@ export const App: React.FC = () => {
                 isReadOnly={isReadOnly}
                 onPrevMonth={handlePrevMonth}
                 onNextMonth={handleNextMonth}
-                onSelectYear={setCurrentYear}
-                onSelectMonth={setCurrentMonth}
+                onSelectYear={handleSelectYear}
+                onSelectMonth={handleSelectMonth}
                 onJumpToday={handleJumpToday}
                 onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
+                onBackToYear={handleBackToYear}
                 onApplyRange={handleApplyRange}
                 onResetRange={handleResetRange}
               />
@@ -325,33 +521,34 @@ export const App: React.FC = () => {
                 isReadOnly={isReadOnly}
                 onUpdateColleagues={setColleagues}
                 onNavigateToPeriod={(y, m) => {
-                  setCurrentYear(y);
-                  setCurrentMonth(m);
+                  handleSelectYear(y);
+                  handleSelectMonth(m);
                 }}
                 onAddUserVacationOverride={handleAddUserVacationOverride}
                 onDeleteUserVacationOverride={handleDeleteUserVacationOverride}
               />
 
               <div className="text-center text-[11px] text-[#81796e]/70 py-1">
-                Сменограф • График смен • ст. 112 и 153 ТК РФ
+                Табелиум • График смен • ст. 112 и 153 ТК РФ
               </div>
             </div>
           </div>
         ) : (
-          <YearView
-            year={currentYear}
-            config={config}
-            overrides={overrides}
-            colleagues={colleagues}
-            isReadOnly={isReadOnly}
-            onSelectYear={setCurrentYear}
-            onJumpToday={handleJumpToday}
-            onOpenMonth={(m) => {
-              setCurrentMonth(m);
-              setViewMode('month');
-            }}
-            onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
-          />
+          <div className="flex-1 min-h-0 h-full overflow-hidden flex flex-col">
+            <YearView
+              year={currentYear}
+              config={config}
+              overrides={overrides}
+              colleagues={colleagues}
+              isReadOnly={isReadOnly}
+              layoutMode="fit-screen"
+              activeTransitionMonth={activeTransitionMonth}
+              onSelectYear={handleSelectYear}
+              onJumpToday={handleJumpToday}
+              onOpenMonth={handleOpenMonthFromYear}
+              onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
+            />
+          </div>
         )}
       </main>
 
