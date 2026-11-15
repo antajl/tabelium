@@ -168,7 +168,7 @@ export const App: React.FC = () => {
   const shareUrl = generateShareUrl(config, overrides, currentYear, currentMonth);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans antialiased">
       <Navbar
         scheduleName={config.scheduleName}
         isReadOnly={isReadOnly}
@@ -178,7 +178,7 @@ export const App: React.FC = () => {
         onExitReadOnly={handleExitReadOnly}
       />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 space-y-4">
+      <main className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 space-y-4">
         <LegendBar />
 
         <CalendarGrid
@@ -202,8 +202,8 @@ export const App: React.FC = () => {
         />
       </main>
 
-      <footer className="py-4 border-t border-slate-900 text-center text-xs text-slate-500">
-        <p>Сменограф • График 2/2 в ночь • Официальные праздники РФ ст. 112 ТК РФ</p>
+      <footer className="py-5 border-t border-slate-900 text-center text-xs text-slate-500">
+        <p>Сменограф • График 2/2 в ночь • ст. 112 и 153 ТК РФ</p>
       </footer>
 
       <DayModal

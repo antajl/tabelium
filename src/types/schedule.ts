@@ -7,55 +7,50 @@ export interface ShiftDefinition {
   colorBg: string;
   colorBorder: string;
   colorText: string;
-  icon: string;
   badgeBg: string;
-  badgeText: string;
+  dotColor: string;
 }
 
 export const SHIFT_DEFINITIONS: Record<ShiftType, ShiftDefinition> = {
   work: {
     type: 'work',
-    label: 'Работа (в ночь)',
+    label: 'Смена (20:00 — 08:00)',
     shortLabel: 'Смена',
-    colorBg: 'bg-indigo-950/60 hover:bg-indigo-900/70',
-    colorBorder: 'border-indigo-500/50',
-    colorText: 'text-indigo-200',
-    icon: 'Moon',
-    badgeBg: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
-    badgeText: 'Смена 20:00',
+    colorBg: 'bg-slate-900/90 hover:bg-slate-850',
+    colorBorder: 'border-indigo-500/30',
+    colorText: 'text-indigo-300',
+    badgeBg: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20',
+    dotColor: 'bg-indigo-400',
   },
   off: {
     type: 'off',
     label: 'Выходной',
     shortLabel: 'Вых',
-    colorBg: 'bg-slate-800/40 hover:bg-slate-800/70',
-    colorBorder: 'border-slate-700/40',
+    colorBg: 'bg-slate-900/40 hover:bg-slate-850/50',
+    colorBorder: 'border-slate-800/80',
     colorText: 'text-slate-400',
-    icon: 'Coffee',
-    badgeBg: 'bg-slate-700/30 text-slate-400 border-slate-600/30',
-    badgeText: 'Выходной',
+    badgeBg: 'bg-slate-800/40 text-slate-400 border-slate-700/40',
+    dotColor: 'bg-slate-600',
   },
   overtime: {
     type: 'overtime',
-    label: 'Подработка (в ночь)',
+    label: 'Подработка (20:00 — 08:00)',
     shortLabel: 'Подр',
-    colorBg: 'bg-amber-950/60 hover:bg-amber-900/70',
-    colorBorder: 'border-amber-500/50',
-    colorText: 'text-amber-200',
-    icon: 'Zap',
-    badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-    badgeText: 'Подработка',
+    colorBg: 'bg-slate-900/90 hover:bg-slate-850',
+    colorBorder: 'border-amber-500/40',
+    colorText: 'text-amber-300',
+    badgeBg: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+    dotColor: 'bg-amber-400',
   },
   vacation: {
     type: 'vacation',
     label: 'Отпуск',
     shortLabel: 'Отп',
-    colorBg: 'bg-emerald-950/60 hover:bg-emerald-900/70',
-    colorBorder: 'border-emerald-500/50',
-    colorText: 'text-emerald-200',
-    icon: 'Palmtree',
-    badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-    badgeText: 'Отпуск',
+    colorBg: 'bg-slate-900/90 hover:bg-slate-850',
+    colorBorder: 'border-emerald-500/30',
+    colorText: 'text-emerald-300',
+    badgeBg: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+    dotColor: 'bg-emerald-400',
   },
 };
 
