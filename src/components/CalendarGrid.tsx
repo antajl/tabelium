@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
   RotateCcw,
   X,
+  FileText,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
@@ -21,7 +22,7 @@ interface CalendarGridProps {
   onSelectYear: (y: number) => void;
   onSelectMonth: (m: number) => void;
   onJumpToday: () => void;
-  onSelectDay: (day: DayShiftInfo) => void;
+  onSelectDay: (day: DayShiftInfo, anchorRect: DOMRect) => void;
   onApplyRange?: (startStr: string, endStr: string, status: ShiftType) => void;
   onResetRange?: (startStr: string, endStr: string) => void;
 }
@@ -81,8 +82,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     setIsMouseDown(false);
   };
 
-  const handleCellMouseDown = (day: DayShiftInfo) => {
+  // Window-level mouseup listener so dragging outside the table never breaks the selection
+  useEffect(() => {
+    if (!isMouseDown) return;
+
+    const handleGlobalMouseUp = () => {
+      setIsMouseDown(false);
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isMouseDown]);
+
+  const handleCellMouseDown = (day: DayShiftInfo, e: React.MouseEvent) => {
     if (isReadOnly) return;
+    if (e.button !== 0) return; // Only primary left-click
     setIsMouseDown(true);
     setRangeAnchor(day.dateStr);
     setRangeTarget(day.dateStr);
@@ -93,14 +109,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     setRangeTarget(day.dateStr);
   };
 
-  const handleCellMouseUp = (day: DayShiftInfo) => {
+  const handleCellMouseUp = (day: DayShiftInfo, e: React.MouseEvent<HTMLDivElement>) => {
     if (isReadOnly) return;
     if (isMouseDown) {
       setIsMouseDown(false);
-      if (rangeAnchor === day.dateStr) {
-        // Single click without drag -> open DayModal
+      // Single click without dragging across multiple dates -> open DayModal Popover
+      if (rangeAnchor === day.dateStr && rangeTarget === day.dateStr) {
         clearRange();
-        onSelectDay(day);
+        const rect = e.currentTarget.getBoundingClientRect();
+        onSelectDay(day, rect);
       }
     }
   };
@@ -208,14 +225,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       </div>
 
       {/* Days Grid - Clean Square Cells */}
-      <div
-        className="grid grid-cols-7 gap-1.5 sm:gap-2"
-        onMouseLeave={() => {
-          if (isMouseDown) {
-            setIsMouseDown(false);
-          }
-        }}
-      >
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {/* Transparent blank slots */}
         {Array.from({ length: blankDaysCount }).map((_, i) => (
           <div
@@ -232,9 +242,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           return (
             <div
               key={day.dateStr}
-              onMouseDown={() => handleCellMouseDown(day)}
+              onMouseDown={(e) => handleCellMouseDown(day, e)}
               onMouseEnter={() => handleCellMouseEnter(day)}
-              onMouseUp={() => handleCellMouseUp(day)}
+              onMouseUp={(e) => handleCellMouseUp(day, e)}
               className={`relative flex flex-col justify-between aspect-square min-h-[64px] sm:min-h-[82px] md:min-h-[92px] p-2 sm:p-2.5 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
                 def.colorBg
               } ${def.colorBorder} ${
@@ -251,7 +261,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   : ''
               }`}
             >
-              {/* Day Header (Number on Left, 2X Tag on Right) */}
+              {/* Day Header (Number on Left, 2X Tag / Note on Right) */}
               <div className="flex items-start justify-between gap-1 leading-none">
                 <span
                   className={`text-sm sm:text-base font-bold tabular-nums ${
@@ -265,15 +275,27 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   {day.dayNumber}
                 </span>
 
-                {/* 2X Double Pay Tag on Holidays */}
-                {day.isDoublePay && (
-                  <span
-                    className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
-                    title={`Двойная оплата: ${day.holidayName || 'Праздник РФ'}`}
-                  >
-                    2X
-                  </span>
-                )}
+                <div className="flex items-center gap-1 shrink-0">
+                  {/* Note Indicator */}
+                  {day.note && (
+                    <span
+                      title={`Заметка: ${day.note}`}
+                      className="text-[#b68231] hover:text-[#7b511c]"
+                    >
+                      <FileText className="w-3 h-3" strokeWidth={2} />
+                    </span>
+                  )}
+
+                  {/* 2X Double Pay Tag on Holidays */}
+                  {day.isDoublePay && (
+                    <span
+                      className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
+                      title={`Двойная оплата: ${day.holidayName || 'Праздник РФ'}`}
+                    >
+                      2X
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Center Area: only shown for Overtime to clearly identify extra shift */}

@@ -56,7 +56,10 @@ export const App: React.FC = () => {
 
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
 
-  const [selectedDay, setSelectedDay] = useState<DayShiftInfo | null>(null);
+  const [selectedDayInfo, setSelectedDayInfo] = useState<{
+    day: DayShiftInfo;
+    rect: DOMRect;
+  } | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isExportImportOpen, setIsExportImportOpen] = useState<boolean>(false);
@@ -239,7 +242,7 @@ export const App: React.FC = () => {
               onSelectYear={setCurrentYear}
               onSelectMonth={setCurrentMonth}
               onJumpToday={handleJumpToday}
-              onSelectDay={(day) => setSelectedDay(day)}
+              onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
               onApplyRange={handleApplyRange}
               onResetRange={handleResetRange}
             />
@@ -261,10 +264,11 @@ export const App: React.FC = () => {
       </main>
 
       <DayModal
-        day={selectedDay}
-        isOpen={!!selectedDay}
+        day={selectedDayInfo?.day || null}
+        anchorRect={selectedDayInfo?.rect || null}
+        isOpen={!!selectedDayInfo}
         isReadOnly={isReadOnly}
-        onClose={() => setSelectedDay(null)}
+        onClose={() => setSelectedDayInfo(null)}
         onSave={handleSaveDay}
         onReset={handleResetDay}
         onSetAnchorDate={(dateStr) => {

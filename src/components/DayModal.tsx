@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   RotateCcw,
-  Clock,
   Check,
   AlertCircle,
+  Calendar,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
 
-interface DayModalProps {
+export interface DayModalProps {
   day: DayShiftInfo | null;
+  anchorRect: DOMRect | null;
   isOpen: boolean;
   isReadOnly: boolean;
   onClose: () => void;
@@ -21,6 +22,7 @@ interface DayModalProps {
 
 export const DayModal: React.FC<DayModalProps> = ({
   day,
+  anchorRect,
   isOpen,
   isReadOnly,
   onClose,
@@ -28,16 +30,103 @@ export const DayModal: React.FC<DayModalProps> = ({
   onReset,
   onSetAnchorDate,
 }) => {
-  if (!isOpen || !day) return null;
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [note, setNote] = useState<string>('');
+  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
-  const [selectedStatus, setSelectedStatus] = useState<ShiftType>(day.status);
-  const [note, setNote] = useState<string>(day.note || '');
+  useEffect(() => {
+    if (day) {
+      setNote(day.note || '');
+    }
+  }, [day]);
+
+  // Calculate Popover Position relative to anchorRect without blur backdrop
+  useEffect(() => {
+    if (!isOpen || !anchorRect) return;
+
+    const width = 310;
+    const height = 370;
+    const padding = 12;
+
+    let left = 0;
+    let top = 0;
+
+    const isMobile = window.innerWidth < 640;
+
+    if (isMobile) {
+      // On narrow mobile devices, center horizontally
+      left = Math.max(padding, (window.innerWidth - width) / 2);
+      if (anchorRect.bottom + height + padding <= window.innerHeight) {
+        top = anchorRect.bottom + 8;
+      } else if (anchorRect.top - height - padding >= 0) {
+        top = anchorRect.top - height - 8;
+      } else {
+        top = Math.max(padding, window.innerHeight - height - padding);
+      }
+    } else {
+      // Desktop: Prefer positioning to the right of the cell
+      if (anchorRect.right + width + padding <= window.innerWidth) {
+        left = anchorRect.right + 8;
+        top = Math.max(padding, Math.min(anchorRect.top, window.innerHeight - height - padding));
+      }
+      // Else position to the left of the cell
+      else if (anchorRect.left - width - padding >= 0) {
+        left = anchorRect.left - width - 8;
+        top = Math.max(padding, Math.min(anchorRect.top, window.innerHeight - height - padding));
+      }
+      // Else position below cell
+      else {
+        left = Math.max(padding, Math.min(anchorRect.left, window.innerWidth - width - padding));
+        top = Math.min(anchorRect.bottom + 8, window.innerHeight - height - padding);
+      }
+    }
+
+    setCoords({ top, left });
+  }, [isOpen, anchorRect]);
+
+  // Click Outside to Close (No full-screen blur!)
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    }
+
+    if (isOpen) {
+      // Delay listener slightly to prevent the opening click from triggering outside click
+      const timer = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+      }, 50);
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !day) return null;
 
   const [yearStr, monthStr, dayStr] = day.dateStr.split('-');
   const monthName = RUSSIAN_MONTH_NAMES[Number(monthStr) - 1];
 
-  const handleSave = () => {
-    onSave(day.dateStr, selectedStatus, note.trim() || undefined);
+  const handleSelectStatus = (newStatus: ShiftType) => {
+    if (isReadOnly) return;
+    onSave(day.dateStr, newStatus, note.trim() || undefined);
+    onClose();
+  };
+
+  const handleSaveNote = () => {
+    if (isReadOnly) return;
+    onSave(day.dateStr, day.status, note.trim() || undefined);
     onClose();
   };
 
@@ -49,207 +138,171 @@ export const DayModal: React.FC<DayModalProps> = ({
   const statusOptions: {
     type: ShiftType;
     label: string;
-    sublabel: string;
     dotColor: string;
     color: string;
     border: string;
+    bg: string;
     activeBg: string;
   }[] = [
     {
       type: 'work',
       label: 'Работа',
-      sublabel: 'Плановая работа в ночь',
       dotColor: 'bg-[#d32f2f]',
       color: 'text-[#93231c]',
       border: 'border-[#f5b8b2]',
-      activeBg: 'bg-[#fdeeed] border-[#d32f2f] ring-1 ring-[#d32f2f]',
+      bg: 'bg-[#fdeeed]',
+      activeBg: 'bg-[#fdeeed] border-[#d32f2f] ring-2 ring-[#d32f2f]',
     },
     {
       type: 'off',
       label: 'Выходной',
-      sublabel: 'Ночь отдыха',
       dotColor: 'bg-[#2e7d32]',
       color: 'text-[#215128]',
       border: 'border-[#b8deb9]',
-      activeBg: 'bg-[#eaf5ec] border-[#2e7d32] ring-1 ring-[#2e7d32]',
+      bg: 'bg-[#eaf5ec]',
+      activeBg: 'bg-[#eaf5ec] border-[#2e7d32] ring-2 ring-[#2e7d32]',
     },
     {
       type: 'overtime',
       label: 'Подработка',
-      sublabel: 'Дополнительная работа в ночь',
       dotColor: 'bg-[#b71c1c]',
       color: 'text-[#7f1d1d]',
       border: 'border-[#e57373] border-dashed',
-      activeBg: 'bg-[#fbdcd9] border-[#b71c1c] ring-1 ring-[#b71c1c]',
+      bg: 'bg-[#fbdcd9]',
+      activeBg: 'bg-[#fbdcd9] border-[#b71c1c] ring-2 ring-[#b71c1c]',
     },
     {
       type: 'vacation',
       label: 'Отпуск',
-      sublabel: 'Ежегодный или дополнительный отпуск',
       dotColor: 'bg-[#e5a100]',
       color: 'text-[#7d5600]',
       border: 'border-[#f6dc84]',
-      activeBg: 'bg-[#fef7db] border-[#e5a100] ring-1 ring-[#e5a100]',
+      bg: 'bg-[#fef7db]',
+      activeBg: 'bg-[#fef7db] border-[#e5a100] ring-2 ring-[#e5a100]',
     },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#252320]/40 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-[#fcfaf7] border border-[#e7ddcf] rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between pb-3 border-b border-[#e7ddcf]">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-bold text-[#252320]">
-                {Number(dayStr)} {monthName} {yearStr}
-              </span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f3ede4] text-[#81796e] font-semibold border border-[#e7ddcf]">
-                {day.dayOfWeekName}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#81796e] mt-1 font-medium">
-              <Clock className="w-3.5 h-3.5 text-[#81796e]" strokeWidth={1.5} />
-              <span>Время смены: с 20:00 до 08:00 утра</span>
-            </div>
-          </div>
+    <div
+      ref={popoverRef}
+      style={{
+        position: 'fixed',
+        top: `${coords.top}px`,
+        left: `${coords.left}px`,
+        width: '310px',
+        zIndex: 60,
+      }}
+      className="bg-[#fcfaf7] border border-[#e7ddcf] rounded-2xl p-4 shadow-2xl backdrop-blur-sm animate-in fade-in-0 zoom-in-95 text-xs select-none"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2.5 border-b border-[#e7ddcf]">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-[#252320]">
+            {Number(dayStr)} {monthName} {yearStr}
+          </span>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#f3ede4] text-[#81796e] font-semibold border border-[#e7ddcf]">
+            {day.dayOfWeekName}
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1 rounded-full text-[#81796e] hover:text-[#252320] hover:bg-[#f7f2ea] transition cursor-pointer"
+          title="Закрыть"
+        >
+          <X className="w-3.5 h-3.5" strokeWidth={1.5} />
+        </button>
+      </div>
+
+      {/* Holiday Alert */}
+      {day.isHoliday && (
+        <div className="mt-2.5 p-2 rounded-xl bg-[#fbf4f0] border border-[#efc8b4] text-[11px] text-[#9d4c37] flex items-center gap-1.5 shadow-2xs">
+          <AlertCircle className="w-3.5 h-3.5 text-[#9d4c37] shrink-0" strokeWidth={1.5} />
+          <span className="font-semibold truncate">{day.holidayName || 'Праздник РФ'}</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#f3e7d5] text-[#7b511c] font-bold border border-[#d8b57a] ml-auto shrink-0">
+            2X
+          </span>
+        </div>
+      )}
+
+      {/* Status Selection (Instant 1-Click Action) */}
+      <div className="mt-3">
+        <label className="text-[11px] font-semibold text-[#81796e] block mb-1.5">
+          Сменить статус дня:
+        </label>
+        <div className="grid grid-cols-2 gap-1.5">
+          {statusOptions.map((opt) => {
+            const isCurrent = day.status === opt.type;
+            return (
+              <button
+                key={opt.type}
+                type="button"
+                onClick={() => handleSelectStatus(opt.type)}
+                className={`flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  isCurrent
+                    ? opt.activeBg
+                    : `${opt.bg} ${opt.border} ${opt.color} hover:brightness-95 active:scale-95`
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${opt.dotColor} shrink-0`} />
+                  <span className={opt.color}>{opt.label}</span>
+                </div>
+                {isCurrent && <Check className="w-3.5 h-3.5 text-[#252320]" strokeWidth={2.5} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Cycle Anchor Button */}
+      {onSetAnchorDate && !isReadOnly && (
+        <div className="mt-3 pt-2.5 border-t border-[#e7ddcf]">
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-sm"
+            type="button"
+            onClick={() => {
+              onSetAnchorDate(day.dateStr);
+              onClose();
+            }}
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full bg-[#fbf5ec] hover:bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold transition shadow-2xs cursor-pointer active:scale-95"
+            title="Сделать этот день началом смены и автоматически перестроить график"
           >
-            <X className="w-4 h-4" strokeWidth={1.5} />
+            <Calendar className="w-3 h-3 text-[#b68231]" strokeWidth={1.5} />
+            <span>Начать цикл с этого дня</span>
           </button>
         </div>
+      )}
 
-        {/* Holiday Notice */}
-        {day.isHoliday && (
-          <div className="mt-3 p-3 rounded-xl bg-[#fbf4f0] border border-[#efc8b4] text-xs text-[#9d4c37] flex items-start gap-2.5 shadow-2xs">
-            <AlertCircle className="w-4 h-4 text-[#9d4c37] shrink-0 mt-0.5" strokeWidth={1.5} />
-            <div>
-              <p className="font-semibold text-[#9d4c37]">
-                {day.holidayName || 'Государственный праздник РФ'}
-              </p>
-              <p className="text-[#7d3d2c] text-[11px] mt-0.5">
-                По ст. 153 ТК РФ работа в этот день оплачивается не менее чем в двойном размере.
-              </p>
-            </div>
-          </div>
-        )}
+      {/* Note Input */}
+      {!isReadOnly && (
+        <div className="mt-2.5">
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={handleSaveNote}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSaveNote();
+            }}
+            placeholder="Заметка к дню (Enter)..."
+            className="w-full bg-white border border-[#e7ddcf] rounded-xl px-2.5 py-1.5 text-[11px] text-[#252320] placeholder-[#bcb7ad] focus:outline-none focus:border-[#d8b57a] shadow-2xs"
+          />
+        </div>
+      )}
 
-        {isReadOnly ? (
-          <div className="py-6 text-center text-sm text-[#81796e]">
-            Статус дня:{' '}
-            <strong className="text-[#252320] font-semibold">
-              {day.status === 'work'
-                ? 'Работа'
-                : day.status === 'off'
-                ? 'Выходной'
-                : day.status === 'overtime'
-                ? 'Подработка'
-                : 'Отпуск'}
-            </strong>
-            {day.note && <p className="mt-2 text-xs text-[#81796e]">Заметка: {day.note}</p>}
-          </div>
-        ) : (
-          <>
-            {/* Status Select */}
-            <div className="mt-4 space-y-2">
-              <label className="text-xs font-semibold text-[#81796e] block">
-                Статус дня
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {statusOptions.map((opt) => {
-                  const isSelected = selectedStatus === opt.type;
-                  return (
-                    <button
-                      key={opt.type}
-                      type="button"
-                      onClick={() => setSelectedStatus(opt.type)}
-                      className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-colors shadow-2xs ${
-                        isSelected
-                          ? opt.activeBg
-                          : `bg-white ${opt.border} hover:bg-[#faf6f0]`
-                      }`}
-                    >
-                      <span className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${opt.dotColor}`} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-sm font-semibold ${opt.color}`}>{opt.label}</span>
-                          {isSelected && <Check className="w-4 h-4 text-[#252320]" strokeWidth={2} />}
-                        </div>
-                        <span className="text-xs text-[#81796e] block mt-0.5 leading-snug">
-                          {opt.sublabel}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Note input */}
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-[#81796e] block mb-1">
-                Заметка к смене
-              </label>
-              <input
-                type="text"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Например: подмена коллеги, смена с 21:00"
-                className="w-full bg-white border border-[#e7ddcf] rounded-xl px-3.5 py-2 text-xs text-[#252320] placeholder-[#bcb7ad] focus:outline-none focus:border-[#d8b57a] shadow-2xs"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-4 border-t border-[#e7ddcf]">
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                {day.isOverridden && (
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs cursor-pointer"
-                    title="Вернуть статус по базовому циклу"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    <span>Сбросить к дефолту</span>
-                  </button>
-                )}
-
-                {onSetAnchorDate && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onSetAnchorDate(day.dateStr);
-                      onClose();
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#7b511c] bg-[#fbf5ec] hover:bg-[#f3e7d5] border border-[#d8b57a] transition shadow-2xs cursor-pointer"
-                    title="Сделать этот день началом первой смены в графике"
-                  >
-                    <span>Начать цикл с этого дня</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto ml-auto">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs cursor-pointer"
-                >
-                  Отмена
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  className="flex-1 sm:flex-none px-5 py-2 rounded-full text-xs font-semibold text-[#2a1c0a] bg-[#f3e7d5] hover:bg-[#e7d1ab] border border-[#d8b57a] shadow-sm transition active:scale-95 cursor-pointer"
-                >
-                  Сохранить
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+      {/* Reset to Default */}
+      {day.isOverridden && !isReadOnly && (
+        <div className="mt-2 pt-2 border-t border-[#e7ddcf] flex justify-end">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex items-center gap-1 text-[11px] text-[#81796e] hover:text-[#93231c] transition cursor-pointer"
+            title="Вернуть базовый статус по формуле 2/2"
+          >
+            <RotateCcw className="w-3 h-3" strokeWidth={1.5} />
+            <span>Сбросить к дефолту</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
