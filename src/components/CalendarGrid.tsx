@@ -6,6 +6,7 @@ import {
   RotateCcw,
   X,
   FileText,
+  LayoutGrid,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
@@ -24,6 +25,7 @@ interface CalendarGridProps {
   onSelectMonth: (m: number) => void;
   onJumpToday: () => void;
   onSelectDay: (day: DayShiftInfo, anchorRect: DOMRect) => void;
+  onBackToYear?: () => void;
   onApplyRange?: (startStr: string, endStr: string, status: ShiftType) => void;
   onResetRange?: (startStr: string, endStr: string) => void;
 }
@@ -39,6 +41,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   onSelectMonth,
   onJumpToday,
   onSelectDay,
+  onBackToYear,
   onApplyRange,
   onResetRange,
 }) => {
@@ -195,8 +198,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           </div>
         </div>
 
-        {/* Right: Today Button */}
+        {/* Right: Actions (Back to Year & Today Button) */}
         <div className="flex items-center gap-2 ml-auto">
+          {onBackToYear && (
+            <button
+              onClick={onBackToYear}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+              title="Вернуться к годовому календарю"
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
+              <span>Весь год</span>
+            </button>
+          )}
+
           <button
             onClick={onJumpToday}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
@@ -296,12 +310,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       2X
                     </span>
                   )}
+
+                  {/* Overtime Tag in Header when Colleague is on Vacation (never displaces vacation) */}
+                  {day.status === 'overtime' && day.colleagueVacations && day.colleagueVacations.length > 0 && (
+                    <span
+                      className="inline-flex items-center px-1.5 py-0.2 rounded-md text-[9px] font-bold text-[#7f1d1d] bg-[#fbdcd9] border border-[#e57373] border-dashed shrink-0"
+                      title="Подработка"
+                    >
+                      <span className="hidden sm:inline">Подработка</span>
+                      <span className="sm:hidden">Подр.</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Center Area: Overtime / Colleague Vacations */}
-              <div className="flex flex-col items-center justify-center gap-1 my-auto w-full overflow-hidden">
-                {day.status === 'overtime' && (
+              {/* Center Area: Overtime (when no colleague vacations) OR Colleague Vacations */}
+              <div className="flex flex-col items-center justify-center my-auto w-full overflow-hidden">
+                {day.status === 'overtime' && (!day.colleagueVacations || day.colleagueVacations.length === 0) && (
                   <span className="text-[10px] sm:text-xs font-bold text-[#7f1d1d] px-1.5 py-0.5 rounded-md bg-[#fbdcd9] border border-[#e57373] border-dashed">
                     Подработка
                   </span>
