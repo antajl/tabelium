@@ -271,7 +271,7 @@ export const YearView: React.FC<YearViewProps> = ({
                   : 'Перейти к текущему году'
               }
             >
-              <RotateCcw className="w-3 h-3 text-[#b68231]" strokeWidth={1.75} />
+              <Calendar className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.75} />
               {isCurrentYear ? (
                 <span className="font-semibold text-[#b68231]">
                   <span className="hidden sm:inline">Текущий: </span>
