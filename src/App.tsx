@@ -168,7 +168,7 @@ export const App: React.FC = () => {
   const shareUrl = generateShareUrl(config, overrides, currentYear, currentMonth);
 
   return (
-    <div className="min-h-screen bg-[#181715] text-[#ede7dc] flex flex-col font-sans antialiased">
+    <div className="min-h-screen bg-[#faf8f4] text-[#252320] flex flex-col font-sans antialiased">
       <Navbar
         scheduleName={config.scheduleName}
         isReadOnly={isReadOnly}
@@ -202,7 +202,7 @@ export const App: React.FC = () => {
         />
       </main>
 
-      <footer className="py-5 border-t border-[#26231f] text-center text-xs text-[#736b5e]">
+      <footer className="py-5 border-t border-[#e7ddcf] text-center text-xs text-[#81796e]">
         <p>Сменограф • График 2/2 в ночь • ст. 112 и 153 ТК РФ</p>
       </footer>
 

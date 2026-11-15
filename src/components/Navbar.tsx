@@ -19,38 +19,38 @@ export const Navbar: React.FC<NavbarProps> = ({
   onExitReadOnly,
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-[#1d1b18]/95 backdrop-blur-md border-b border-[#2e2a26] px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#e7ddcf] px-4 py-3 sm:px-6 shadow-[0_1px_3px_rgba(45,30,15,0.04)]">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
         {/* Brand & Context */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-[#272420] border border-[#3b362f] flex items-center justify-center text-[#d49e54] shrink-0">
+          <div className="w-9 h-9 rounded-full bg-[#f3e7d5] border border-[#d8b57a] flex items-center justify-center text-[#7b511c] shrink-0 shadow-sm">
             <Moon className="w-4 h-4" strokeWidth={1.5} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm sm:text-base font-semibold text-[#ede7dc] truncate">
+              <span className="text-sm sm:text-base font-semibold text-[#252320] truncate">
                 {scheduleName}
               </span>
               {isReadOnly && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[#362b1e] text-[#deb887] border border-[#59442c]">
-                  <Eye className="w-3 h-3" /> Просмотр
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a]">
+                  <Eye className="w-3 h-3" strokeWidth={1.5} /> Просмотр
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#999081] truncate">
+            <p className="text-xs text-[#81796e] truncate">
               Смены в ночь: 20:00 — 08:00 • График 2/2
             </p>
           </div>
         </div>
 
-        {/* Quiet Actions */}
+        {/* Actions in Old Money style */}
         <div className="flex items-center gap-2 shrink-0">
           {isReadOnly ? (
             <button
               onClick={onExitReadOnly}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#292621] hover:bg-[#332f29] text-[#ede7dc] text-xs font-medium border border-[#3b362f] transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#2a1c0a] text-xs font-semibold border border-[#d8b57a] transition shadow-sm"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-[#d49e54]" strokeWidth={1.5} />
+              <RotateCcw className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
               <span>Мой график</span>
             </button>
           ) : (
@@ -58,16 +58,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenShare}
                 title="Поделиться графиком"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#27231d] hover:bg-[#332b21] text-[#deb887] border border-[#4d3d29] text-xs font-medium transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#d8b57a] bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#2a1c0a] text-xs font-semibold shadow-sm transition active:scale-95"
               >
-                <Share2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                <Share2 className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
                 <span className="hidden sm:inline">Поделиться</span>
               </button>
 
               <button
                 onClick={onExportImport}
                 title="Экспорт и импорт"
-                className="p-2 rounded-lg bg-[#24211d] hover:bg-[#2e2a25] text-[#999081] hover:text-[#ede7dc] border border-[#36312a] transition"
+                className="p-2 rounded-full bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-sm active:scale-95"
               >
                 <Download className="w-4 h-4" strokeWidth={1.5} />
               </button>
@@ -75,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenSettings}
                 title="Настройки"
-                className="p-2 rounded-lg bg-[#24211d] hover:bg-[#2e2a25] text-[#999081] hover:text-[#ede7dc] border border-[#36312a] transition"
+                className="p-2 rounded-full bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-sm active:scale-95"
               >
                 <Settings className="w-4 h-4" strokeWidth={1.5} />
               </button>

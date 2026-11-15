@@ -57,62 +57,62 @@ export const DayModal: React.FC<DayModalProps> = ({
       type: 'work',
       label: 'Смена',
       sublabel: 'Смена в ночь с 20:00 до 08:00',
-      dotColor: 'bg-[#98a4ad]',
-      color: 'text-[#dce2e6]',
-      border: 'border-[#383d42]',
-      activeBg: 'bg-[#292d30] border-[#5e666e] ring-1 ring-[#5e666e]',
+      dotColor: 'bg-[#55738a]',
+      color: 'text-[#333f4b]',
+      border: 'border-[#d6e2e9]',
+      activeBg: 'bg-[#f2f6f8] border-[#88a8bc] ring-1 ring-[#88a8bc]',
     },
     {
       type: 'off',
       label: 'Выходной',
       sublabel: 'Ночь отдыха',
-      dotColor: 'bg-[#524b42]',
-      color: 'text-[#827a6e]',
-      border: 'border-[#2d2925]',
-      activeBg: 'bg-[#2b2723] border-[#4f483f] ring-1 ring-[#4f483f]',
+      dotColor: 'bg-[#bcb7ad]',
+      color: 'text-[#81796e]',
+      border: 'border-[#e7ddcf]',
+      activeBg: 'bg-[#f7f2ea] border-[#c7b79e] ring-1 ring-[#c7b79e]',
     },
     {
       type: 'overtime',
       label: 'Подработка',
       sublabel: 'Дополнительная смена с 20:00 до 08:00',
-      dotColor: 'bg-[#d19c52]',
-      color: 'text-[#deb887]',
-      border: 'border-[#52412e]',
-      activeBg: 'bg-[#382b1c] border-[#8a6839] ring-1 ring-[#8a6839]',
+      dotColor: 'bg-[#b68231]',
+      color: 'text-[#7b511c]',
+      border: 'border-[#e7d1ab]',
+      activeBg: 'bg-[#faf6f0] border-[#d8b57a] ring-1 ring-[#d8b57a]',
     },
     {
       type: 'vacation',
       label: 'Отпуск',
       sublabel: 'Ежегодный или дополнительный отпуск',
-      dotColor: 'bg-[#6d9684]',
-      color: 'text-[#a3c2b4]',
-      border: 'border-[#33463e]',
-      activeBg: 'bg-[#23332c] border-[#4d6e5f] ring-1 ring-[#4d6e5f]',
+      dotColor: 'bg-[#557658]',
+      color: 'text-[#354a38]',
+      border: 'border-[#c8dcc9]',
+      activeBg: 'bg-[#f0f5f0] border-[#aac7ab] ring-1 ring-[#aac7ab]',
     },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-[#201e1b] border border-[#332e27] rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#252320]/40 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-[#fcfaf7] border border-[#e7ddcf] rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-start justify-between pb-3 border-b border-[#2d2924]">
+        <div className="flex items-start justify-between pb-3 border-b border-[#e7ddcf]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-semibold text-[#ede7dc]">
+              <span className="text-base sm:text-lg font-bold text-[#252320]">
                 {Number(dayStr)} {monthName} {yearStr}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-[#272420] text-[#999081] font-medium border border-[#36312a]">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f3ede4] text-[#81796e] font-semibold border border-[#e7ddcf]">
                 {day.dayOfWeekName}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#999081] mt-1">
-              <Clock className="w-3.5 h-3.5 text-[#736b5e]" strokeWidth={1.5} />
+            <div className="flex items-center gap-1.5 text-xs text-[#81796e] mt-1 font-medium">
+              <Clock className="w-3.5 h-3.5 text-[#81796e]" strokeWidth={1.5} />
               <span>Время смены: с 20:00 до 08:00 утра</span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-[#272420] hover:bg-[#332f2a] text-[#999081] hover:text-[#ede7dc] transition"
+            className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-sm"
           >
             <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
@@ -120,13 +120,13 @@ export const DayModal: React.FC<DayModalProps> = ({
 
         {/* Holiday Notice */}
         {day.isHoliday && (
-          <div className="mt-3 p-3 rounded-xl bg-[#292218] border border-[#4a3924] text-xs text-[#deb887] flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 text-[#d19c52] shrink-0 mt-0.5" strokeWidth={1.5} />
+          <div className="mt-3 p-3 rounded-xl bg-[#fbf4f0] border border-[#efc8b4] text-xs text-[#9d4c37] flex items-start gap-2.5 shadow-2xs">
+            <AlertCircle className="w-4 h-4 text-[#9d4c37] shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
-              <p className="font-medium text-[#f0c377]">
+              <p className="font-semibold text-[#9d4c37]">
                 {day.holidayName || 'Государственный праздник РФ'}
               </p>
-              <p className="text-[#a3947f] text-[11px] mt-0.5">
+              <p className="text-[#7d3d2c] text-[11px] mt-0.5">
                 По ст. 153 ТК РФ работа в этот день оплачивается не менее чем в двойном размере.
               </p>
             </div>
@@ -134,9 +134,9 @@ export const DayModal: React.FC<DayModalProps> = ({
         )}
 
         {isReadOnly ? (
-          <div className="py-6 text-center text-sm text-[#999081]">
+          <div className="py-6 text-center text-sm text-[#81796e]">
             Статус дня:{' '}
-            <strong className="text-[#ede7dc] font-medium">
+            <strong className="text-[#252320] font-semibold">
               {day.status === 'work'
                 ? 'Смена в ночь'
                 : day.status === 'off'
@@ -145,13 +145,13 @@ export const DayModal: React.FC<DayModalProps> = ({
                 ? 'Подработка в ночь'
                 : 'Отпуск'}
             </strong>
-            {day.note && <p className="mt-2 text-xs text-[#999081]">Заметка: {day.note}</p>}
+            {day.note && <p className="mt-2 text-xs text-[#81796e]">Заметка: {day.note}</p>}
           </div>
         ) : (
           <>
             {/* Status Select */}
             <div className="mt-4 space-y-2">
-              <label className="text-xs font-medium text-[#999081] block">
+              <label className="text-xs font-semibold text-[#81796e] block">
                 Статус дня
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -162,19 +162,19 @@ export const DayModal: React.FC<DayModalProps> = ({
                       key={opt.type}
                       type="button"
                       onClick={() => setSelectedStatus(opt.type)}
-                      className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-colors ${
+                      className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-colors shadow-2xs ${
                         isSelected
                           ? opt.activeBg
-                          : `bg-[#24211d] ${opt.border} hover:bg-[#2b2723]`
+                          : `bg-white ${opt.border} hover:bg-[#faf6f0]`
                       }`}
                     >
                       <span className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${opt.dotColor}`} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <span className={`text-sm font-medium ${opt.color}`}>{opt.label}</span>
-                          {isSelected && <Check className="w-4 h-4 text-[#ede7dc]" strokeWidth={1.5} />}
+                          <span className={`text-sm font-semibold ${opt.color}`}>{opt.label}</span>
+                          {isSelected && <Check className="w-4 h-4 text-[#252320]" strokeWidth={2} />}
                         </div>
-                        <span className="text-xs text-[#736b5e] block mt-0.5 leading-snug">
+                        <span className="text-xs text-[#81796e] block mt-0.5 leading-snug">
                           {opt.sublabel}
                         </span>
                       </div>
@@ -186,7 +186,7 @@ export const DayModal: React.FC<DayModalProps> = ({
 
             {/* Note input */}
             <div className="mt-4">
-              <label className="text-xs font-medium text-[#999081] block mb-1">
+              <label className="text-xs font-semibold text-[#81796e] block mb-1">
                 Заметка к смене
               </label>
               <input
@@ -194,17 +194,17 @@ export const DayModal: React.FC<DayModalProps> = ({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Например: подмена коллеги, смена с 21:00"
-                className="w-full bg-[#181715] border border-[#332f2a] rounded-xl px-3.5 py-2 text-xs text-[#ede7dc] placeholder-[#6b6355] focus:outline-none focus:border-[#deb887]"
+                className="w-full bg-white border border-[#e7ddcf] rounded-xl px-3.5 py-2 text-xs text-[#252320] placeholder-[#bcb7ad] focus:outline-none focus:border-[#d8b57a] shadow-2xs"
               />
             </div>
 
             {/* Actions */}
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-4 border-t border-[#2d2924]">
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-4 border-t border-[#e7ddcf]">
               {day.isOverridden ? (
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#999081] hover:text-[#ede7dc] bg-[#272420] hover:bg-[#302c27] transition"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs"
                   title="Вернуть статус по базовому циклу 2/2"
                 >
                   <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -218,14 +218,14 @@ export const DayModal: React.FC<DayModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-medium text-[#999081] hover:text-[#ede7dc] bg-[#272420] hover:bg-[#302c27] transition"
+                  className="flex-1 sm:flex-none px-4 py-2 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs"
                 >
                   Отмена
                 </button>
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="flex-1 sm:flex-none px-5 py-2 rounded-lg text-xs font-semibold text-[#181715] bg-[#deb887] hover:bg-[#ebd0a7] transition"
+                  className="flex-1 sm:flex-none px-5 py-2 rounded-full text-xs font-semibold text-[#2a1c0a] bg-[#f3e7d5] hover:bg-[#e7d1ab] border border-[#d8b57a] shadow-sm transition active:scale-95"
                 >
                   Сохранить
                 </button>
