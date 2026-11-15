@@ -20,6 +20,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   if (!isOpen) return null;
 
   const [scheduleName, setScheduleName] = useState(config.scheduleName);
+  const [cycle, setCycle] = useState(config.cycle || ['work', 'work', 'off', 'off']);
   const [anchorDate, setAnchorDate] = useState(config.anchorDate);
   const [shiftStartTime, setShiftStartTime] = useState(config.shiftStartTime);
   const [shiftEndTime, setShiftEndTime] = useState(config.shiftEndTime);
@@ -27,11 +28,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [hourlyRate, setHourlyRate] = useState(config.hourlyRate ? String(config.hourlyRate) : '');
   const [confirmRestore, setConfirmRestore] = useState(false);
 
+  const PRESETS: { label: string; name: string; cycle: any[] }[] = [
+    { label: '2/2', name: 'График 2/2', cycle: ['work', 'work', 'off', 'off'] },
+    { label: '5/2', name: 'График 5/2', cycle: ['work', 'work', 'work', 'work', 'work', 'off', 'off'] },
+    { label: '6/1', name: 'График 6/1', cycle: ['work', 'work', 'work', 'work', 'work', 'work', 'off'] },
+    { label: '3/3', name: 'График 3/3', cycle: ['work', 'work', 'work', 'off', 'off', 'off'] },
+    { label: '1/3', name: 'График 1/3', cycle: ['work', 'off', 'off', 'off'] },
+    { label: '7/0', name: 'График 7/0', cycle: ['work'] },
+  ];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSaveConfig({
       ...config,
       scheduleName: scheduleName.trim() || 'Мой график',
+      cycle,
       anchorDate,
       shiftStartTime,
       shiftEndTime,
@@ -76,8 +87,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <div>
+            <label className="font-semibold text-[#81796e] block mb-1.5">
+              Тип графика смен
+            </label>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+              {PRESETS.map((p) => {
+                const isActive = JSON.stringify(cycle) === JSON.stringify(p.cycle);
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => {
+                      setCycle(p.cycle);
+                      setScheduleName(p.name);
+                    }}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-semibold border transition text-center cursor-pointer ${
+                      isActive
+                        ? 'bg-[#f3e7d5] text-[#7b511c] border-[#d8b57a] shadow-2xs'
+                        : 'bg-white hover:bg-[#f7f2ea] text-[#252320] border-[#e7ddcf]'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
             <label className="font-semibold text-[#81796e] block mb-1">
-              Опорная дата (День 1 смены 2/2)
+              Опорная дата (День 1 первой рабочей смены)
             </label>
             <input
               type="date"
@@ -86,7 +125,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full bg-white border border-[#e7ddcf] rounded-xl px-3 py-2 text-[#252320] text-xs focus:border-[#d8b57a] focus:outline-none shadow-2xs"
             />
             <p className="text-[11px] text-[#bcb7ad] mt-1">
-              От этой даты математически строится регулярный цикл 2/2 на любые годы вперёд.
+              От этой даты математически строится регулярный цикл на любые годы вперёд.
             </p>
           </div>
 

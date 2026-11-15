@@ -16,6 +16,7 @@ interface DayModalProps {
   onClose: () => void;
   onSave: (dateStr: string, status: ShiftType, note?: string) => void;
   onReset: (dateStr: string) => void;
+  onSetAnchorDate?: (dateStr: string) => void;
 }
 
 export const DayModal: React.FC<DayModalProps> = ({
@@ -25,6 +26,7 @@ export const DayModal: React.FC<DayModalProps> = ({
   onClose,
   onSave,
   onReset,
+  onSetAnchorDate,
 }) => {
   if (!isOpen || !day) return null;
 
@@ -200,32 +202,46 @@ export const DayModal: React.FC<DayModalProps> = ({
 
             {/* Actions */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-4 border-t border-[#e7ddcf]">
-              {day.isOverridden ? (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs"
-                  title="Вернуть статус по базовому циклу 2/2"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
-                  <span>Сбросить к циклу 2/2</span>
-                </button>
-              ) : (
-                <div />
-              )}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                {day.isOverridden && (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs cursor-pointer"
+                    title="Вернуть статус по базовому циклу"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    <span>Сбросить к дефолту</span>
+                  </button>
+                )}
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {onSetAnchorDate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSetAnchorDate(day.dateStr);
+                      onClose();
+                    }}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#7b511c] bg-[#fbf5ec] hover:bg-[#f3e7d5] border border-[#d8b57a] transition shadow-2xs cursor-pointer"
+                    title="Сделать этот день началом первой смены в графике"
+                  >
+                    <span>Начать цикл с этого дня</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto ml-auto">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 sm:flex-none px-4 py-2 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs"
+                  className="flex-1 sm:flex-none px-4 py-2 rounded-full text-xs font-medium text-[#81796e] hover:text-[#252320] bg-white hover:bg-[#f7f2ea] border border-[#e7ddcf] transition shadow-2xs cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="flex-1 sm:flex-none px-5 py-2 rounded-full text-xs font-semibold text-[#2a1c0a] bg-[#f3e7d5] hover:bg-[#e7d1ab] border border-[#d8b57a] shadow-sm transition active:scale-95"
+                  className="flex-1 sm:flex-none px-5 py-2 rounded-full text-xs font-semibold text-[#2a1c0a] bg-[#f3e7d5] hover:bg-[#e7d1ab] border border-[#d8b57a] shadow-sm transition active:scale-95 cursor-pointer"
                 >
                   Сохранить
                 </button>

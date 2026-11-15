@@ -5,12 +5,11 @@ import {
   Calendar as CalendarIcon,
   RotateCcw,
   X,
-  Info,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
-import { RUSSIAN_DAY_OF_WEEK_SHORT, RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
-import { CustomDropdown } from './CustomDropdown';
+import { RUSSIAN_DAY_OF_WEEK_SHORT } from '../utils/scheduleEngine';
+import { MonthYearDropdown } from './MonthYearDropdown';
 
 interface CalendarGridProps {
   year: number;
@@ -43,16 +42,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 }) => {
   const firstDayOfWeek = days.length > 0 ? days[0].dayOfWeek : 1;
   const blankDaysCount = firstDayOfWeek - 1;
-
-  const yearsList = [2024, 2025, 2026, 2027, 2028, 2029, 2030].map((y) => ({
-    value: y,
-    label: `${y} г.`,
-  }));
-
-  const monthsList = RUSSIAN_MONTH_NAMES.map((name, idx) => ({
-    value: idx + 1,
-    label: name,
-  }));
 
   // Range Selection State (drag or click-tap)
   const [rangeAnchor, setRangeAnchor] = useState<string | null>(null);
@@ -148,98 +137,90 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   return (
     <div className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]">
-      {/* Top Header: Month & Year Dropdowns + Today Button + Quick Legend */}
-      <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-[#e7ddcf]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Navigation with Custom Dropdowns */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+      {/* Single Horizontal Toolbar Line (CoursingStats / Procursus pattern) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf]">
+        {/* Left: Navigation, Dropdown, Divider, Inline Legend */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Month & Year Navigation */}
+          <div className="flex items-center gap-1">
             <button
               onClick={onPrevMonth}
-              className="p-2 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95"
+              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95"
               title="Предыдущий месяц"
             >
-              <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
+              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
             </button>
 
-            <CustomDropdown
-              value={month}
-              options={monthsList}
-              onChange={onSelectMonth}
-              accentColor="text-[#252320]"
-            />
-
-            <CustomDropdown
-              value={year}
-              options={yearsList}
-              onChange={onSelectYear}
-              accentColor="text-[#7b511c]"
+            <MonthYearDropdown
+              selectedYear={year}
+              selectedMonth={month}
+              onSelectYear={onSelectYear}
+              onSelectMonth={onSelectMonth}
             />
 
             <button
               onClick={onNextMonth}
-              className="p-2 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95"
+              className="p-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-2xs active:scale-95"
               title="Следующий месяц"
             >
-              <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+              <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
             </button>
           </div>
 
-          {/* Jump to Today & Toggle Range Mode */}
-          <div className="flex items-center gap-2">
-            {!isReadOnly && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRangeMode(!isRangeMode);
-                  clearRange();
-                }}
-                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition shadow-2xs active:scale-95 ${
-                  isRangeMode
-                    ? 'bg-[#b68231] text-white border-[#b68231]'
-                    : 'bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border-[#e7ddcf]'
-                }`}
-                title="Режим выбора диапазона дней"
-              >
-                <span>Выбор дней</span>
-              </button>
-            )}
+          <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block mx-1" />
 
-            <button
-              onClick={onJumpToday}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95"
-              title="Перейти к текущему дню"
-            >
-              <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
-              <span className="hidden sm:inline">Текущий месяц</span>
-            </button>
+          {/* Inline Legend (On the exact same row) */}
+          <div className="flex items-center gap-2.5 text-xs">
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
+              <span className="font-semibold text-[#93231c]">Работа</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
+              <span className="font-semibold text-[#7f1d1d]">Подработка</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2e7d32] shrink-0" />
+              <span className="font-semibold text-[#215128]">Выходной</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100] shrink-0" />
+              <span className="font-semibold text-[#7d5600]">Отпуск</span>
+            </div>
           </div>
         </div>
 
-        {/* Compact Integrated Legend (Replaces separate row) */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-[#81796e]">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
-            <span className="font-semibold text-[#93231c]">Работа</span>
-          </div>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 ml-auto">
+          {!isReadOnly && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsRangeMode(!isRangeMode);
+                clearRange();
+              }}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition shadow-2xs active:scale-95 cursor-pointer ${
+                isRangeMode
+                  ? 'bg-[#b68231] text-white border-[#b68231]'
+                  : 'bg-white hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border-[#e7ddcf]'
+              }`}
+              title="Режим выбора диапазона дней"
+            >
+              <span>Выбор дней</span>
+            </button>
+          )}
 
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
-            <span className="font-semibold text-[#7f1d1d]">Подработка</span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2e7d32] shrink-0" />
-            <span className="font-semibold text-[#215128]">Выходной</span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100] shrink-0" />
-            <span className="font-semibold text-[#7d5600]">Отпуск</span>
-          </div>
-
-          <span className="text-[11px] text-[#bcb7ad] ml-auto hidden md:inline">
-            Кликните на день для редактирования или зажмите мышь для выбора диапазона
-          </span>
+          <button
+            onClick={onJumpToday}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#f7f2ea] text-[#7b511c] border border-[#d8b57a] text-xs font-semibold shadow-2xs transition active:scale-95 cursor-pointer"
+            title="Перейти к текущему дню"
+          >
+            <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
+            <span className="hidden sm:inline">Текущий месяц</span>
+          </button>
         </div>
       </div>
 
@@ -260,7 +241,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         })}
       </div>
 
-      {/* Days Grid - Nearly Square Cells */}
+      {/* Days Grid - Pure Square Cells with Consistent Vertical Horizon */}
       <div
         className="grid grid-cols-7 gap-1.5 sm:gap-2"
         onMouseLeave={() => {
@@ -305,70 +286,55 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   : ''
               }`}
             >
-              {/* Day Header */}
-              <div className="flex items-start justify-between gap-1">
-                <div className="flex items-center gap-1">
-                  <span
-                    className={`text-xs sm:text-sm font-semibold tabular-nums leading-none ${
-                      day.isToday
-                        ? 'text-[#b68231] font-bold'
-                        : isWeekend
-                        ? 'text-[#9d4c37]'
-                        : 'text-[#252320]'
-                    }`}
-                  >
-                    {day.dayNumber}
-                  </span>
-                  {day.isToday && (
-                    <span className="hidden sm:inline px-1 py-0.2 rounded-full text-[9px] font-bold bg-[#b68231] text-white leading-none">
-                      Сегодня
-                    </span>
-                  )}
-                </div>
+              {/* Day Header (Number on Left, 2X/Status on Right) */}
+              <div className="flex items-start justify-between gap-1 leading-none">
+                <span
+                  className={`text-xs sm:text-sm font-semibold tabular-nums ${
+                    day.isToday
+                      ? 'text-[#b68231] font-bold'
+                      : isWeekend
+                      ? 'text-[#9d4c37]'
+                      : 'text-[#252320]'
+                  }`}
+                >
+                  {day.dayNumber}
+                </span>
 
                 {/* 2X Double Pay Tag or Overridden marker */}
                 {day.isDoublePay ? (
                   <span
-                    className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
+                    className="inline-flex items-center px-1 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
                     title={`Двойная оплата: ${day.holidayName || 'Праздник РФ'}`}
                   >
                     2X
                   </span>
                 ) : day.isOverridden ? (
                   <span
-                    className="w-1.5 h-1.5 rounded-full bg-[#b68231] shrink-0"
+                    className="w-1.5 h-1.5 rounded-full bg-[#b68231] shrink-0 mt-0.5"
                     title="Статус изменен вручную"
                   />
                 ) : null}
               </div>
 
-              {/* Status Content */}
-              <div className="my-auto">
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${def.dotColor}`} />
-                  <span className={`text-[11px] sm:text-xs font-semibold truncate ${def.colorText}`}>
-                    <span className="sm:hidden">{def.shortLabel}</span>
-                    <span className="hidden sm:inline">{def.label}</span>
-                  </span>
-                </div>
+              {/* Status Content (Centered on a Consistent Axis) */}
+              <div className="flex items-center justify-center gap-1.5 my-auto">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${def.dotColor}`} />
+                <span className={`text-[11px] sm:text-xs font-semibold truncate ${def.colorText}`}>
+                  <span className="sm:hidden">{def.shortLabel}</span>
+                  <span className="hidden sm:inline">{def.label}</span>
+                </span>
+              </div>
 
-                {/* Holiday Name (Distinct Parchment Badge, No Truncation) */}
-                {day.holidayName && (
-                  <div
-                    className="mt-1 px-1 sm:px-1.5 py-0.5 rounded-md bg-[#fbf4f0] border border-[#efc8b4] text-[#9d4c37] text-[9px] leading-tight font-medium shadow-2xs break-words hyphens-auto hidden sm:block"
+              {/* Bottom Slot (Reserved for Holiday text, never displaces middle status) */}
+              <div className="h-3.5 sm:h-4 flex items-center justify-center overflow-hidden">
+                {day.holidayName ? (
+                  <span
+                    className="text-[9px] text-[#9d4c37] font-medium truncate leading-none block text-center"
                     title={day.holidayName}
                   >
                     {day.holidayName}
-                  </div>
-                )}
-
-                {/* Note */}
-                {day.note && (
-                  <div className="flex items-center gap-1 text-[10px] text-[#81796e] truncate mt-0.5">
-                    <Info className="w-2.5 h-2.5 shrink-0 text-[#bcb7ad]" />
-                    <span className="truncate">{day.note}</span>
-                  </div>
-                )}
+                  </span>
+                ) : null}
               </div>
             </div>
           );

@@ -11,7 +11,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  scheduleName,
+  scheduleName: _scheduleName,
   isReadOnly,
   onOpenShare,
   onOpenSettings,
@@ -23,24 +23,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
         {/* Brand & Context */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-base sm:text-lg font-bold tracking-tight text-[#252320]">
-                Сменограф
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#f3ede4] text-[#7b511c] font-semibold border border-[#e7ddcf]">
-                2/2 в ночь
-              </span>
-              {isReadOnly && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a]">
-                  <Eye className="w-3 h-3" strokeWidth={1.5} /> Просмотр
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-[#81796e] truncate">
-              {scheduleName}
-            </p>
-          </div>
+          <span className="text-base sm:text-lg font-bold tracking-tight text-[#252320]">
+            Сменограф
+          </span>
+          {isReadOnly && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a]">
+              <Eye className="w-3 h-3" strokeWidth={1.5} /> Просмотр
+            </span>
+          )}
         </div>
 
         {/* Actions in Old Money style */}

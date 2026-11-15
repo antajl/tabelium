@@ -268,6 +268,13 @@ export const App: React.FC = () => {
         onClose={() => setSelectedDay(null)}
         onSave={handleSaveDay}
         onReset={handleResetDay}
+        onSetAnchorDate={(dateStr) => {
+          if (isReadOnly) return;
+          setConfig((prev) => ({
+            ...prev,
+            anchorDate: dateStr,
+          }));
+        }}
       />
 
       <ShareModal
