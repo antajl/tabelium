@@ -21,6 +21,7 @@ import { Navbar } from './components/Navbar';
 import { CalendarGrid } from './components/CalendarGrid';
 import { MonthStats } from './components/MonthStats';
 import { ColleaguesVacationsCard } from './components/ColleaguesVacationsCard';
+import { YearView } from './components/YearView';
 import { DayModal } from './components/DayModal';
 import { ShareModal } from './components/ShareModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -38,6 +39,7 @@ export const App: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<number>(() => {
     return today.getMonth() + 1; // 1-12
   });
+  const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
 
   const [config, setConfig] = useState<UserScheduleConfig>(() => {
     try {
@@ -60,21 +62,34 @@ export const App: React.FC = () => {
   });
 
   const [colleagues, setColleagues] = useState<Colleague[]>(() => {
+    const defaultList = loadInitialColleagues();
     try {
       const saved = localStorage.getItem(COLLEAGUES_STORAGE_KEY);
       if (saved) {
         const parsed: Colleague[] = JSON.parse(saved);
-        if (!parsed.some((c) => c.isSelf || c.id === 'self')) {
-          const defaultList = loadInitialColleagues();
-          const selfItem = defaultList.find((c) => c.isSelf);
-          if (selfItem) return [selfItem, ...parsed];
-        }
-        return parsed;
+        const merged = defaultList.map((def) => {
+          const existing = parsed.find((p) => p.id === def.id || (def.isSelf && p.isSelf));
+          if (!existing) return def;
+          const existingVacIds = new Set(existing.vacations.map((v) => v.id));
+          const newVacs = def.vacations.filter((v) => !existingVacIds.has(v.id));
+          return {
+            ...existing,
+            colorTheme: existing.colorTheme || def.colorTheme,
+            vacations: [...existing.vacations, ...newVacs].sort((a, b) =>
+              a.startDate.localeCompare(b.startDate)
+            ),
+          };
+        });
+        const defaultIds = new Set(defaultList.map((d) => d.id));
+        const customColleagues = parsed.filter(
+          (p) => !defaultIds.has(p.id) && !p.isSelf && p.id !== 'self'
+        );
+        return [...merged, ...customColleagues];
       }
     } catch (e) {
       console.error(e);
     }
-    return loadInitialColleagues();
+    return defaultList;
   });
 
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
@@ -265,60 +280,79 @@ export const App: React.FC = () => {
       <Navbar
         scheduleName={config.scheduleName}
         isReadOnly={isReadOnly}
+        viewMode={viewMode}
+        onChangeViewMode={setViewMode}
         onOpenShare={() => setIsShareModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onExportImport={() => setIsExportImportOpen(true)}
         onExitReadOnly={handleExitReadOnly}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-          {/* Left Column: Calendar (8 cols on lg) */}
-          <div className="lg:col-span-8 flex flex-col gap-3">
-            <CalendarGrid
-              year={currentYear}
-              month={currentMonth}
-              days={monthDays}
-              isReadOnly={isReadOnly}
-              onPrevMonth={handlePrevMonth}
-              onNextMonth={handleNextMonth}
-              onSelectYear={setCurrentYear}
-              onSelectMonth={setCurrentMonth}
-              onJumpToday={handleJumpToday}
-              onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
-              onApplyRange={handleApplyRange}
-              onResetRange={handleResetRange}
-            />
-          </div>
+      <main className="flex-1 max-w-[1700px] w-full mx-auto px-4 py-3 sm:px-6 lg:px-8">
+        {viewMode === 'month' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            {/* Left Column: Calendar (8 cols on lg) */}
+            <div className="lg:col-span-8 flex flex-col gap-3">
+              <CalendarGrid
+                year={currentYear}
+                month={currentMonth}
+                days={monthDays}
+                isReadOnly={isReadOnly}
+                onPrevMonth={handlePrevMonth}
+                onNextMonth={handleNextMonth}
+                onSelectYear={setCurrentYear}
+                onSelectMonth={setCurrentMonth}
+                onJumpToday={handleJumpToday}
+                onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
+                onApplyRange={handleApplyRange}
+                onResetRange={handleResetRange}
+              />
+            </div>
 
-          {/* Right Column: Month Summary & Colleagues Vacations (4 cols on lg) */}
-          <div className="lg:col-span-4 flex flex-col gap-3">
-            <MonthStats
-              stats={monthStats}
-              month={currentMonth}
-              year={currentYear}
-              config={config}
-            />
+            {/* Right Column: Month Summary & Colleagues Vacations (4 cols on lg) */}
+            <div className="lg:col-span-4 flex flex-col gap-3">
+              <MonthStats
+                stats={monthStats}
+                month={currentMonth}
+                year={currentYear}
+                config={config}
+              />
 
-            <ColleaguesVacationsCard
-              colleagues={colleagues}
-              currentYear={currentYear}
-              currentMonth={currentMonth}
-              isReadOnly={isReadOnly}
-              onUpdateColleagues={setColleagues}
-              onNavigateToPeriod={(y, m) => {
-                setCurrentYear(y);
-                setCurrentMonth(m);
-              }}
-              onAddUserVacationOverride={handleAddUserVacationOverride}
-              onDeleteUserVacationOverride={handleDeleteUserVacationOverride}
-            />
+              <ColleaguesVacationsCard
+                colleagues={colleagues}
+                currentYear={currentYear}
+                currentMonth={currentMonth}
+                isReadOnly={isReadOnly}
+                onUpdateColleagues={setColleagues}
+                onNavigateToPeriod={(y, m) => {
+                  setCurrentYear(y);
+                  setCurrentMonth(m);
+                }}
+                onAddUserVacationOverride={handleAddUserVacationOverride}
+                onDeleteUserVacationOverride={handleDeleteUserVacationOverride}
+              />
 
-            <div className="text-center text-[11px] text-[#81796e]/70 py-1">
-              Сменограф • График смен • ст. 112 и 153 ТК РФ
+              <div className="text-center text-[11px] text-[#81796e]/70 py-1">
+                Сменограф • График смен • ст. 112 и 153 ТК РФ
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <YearView
+            year={currentYear}
+            config={config}
+            overrides={overrides}
+            colleagues={colleagues}
+            isReadOnly={isReadOnly}
+            onSelectYear={setCurrentYear}
+            onJumpToday={handleJumpToday}
+            onOpenMonth={(m) => {
+              setCurrentMonth(m);
+              setViewMode('month');
+            }}
+            onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
+          />
+        )}
       </main>
 
       <DayModal

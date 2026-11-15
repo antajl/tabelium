@@ -17,8 +17,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onSaveConfig,
   onRestoreGoogleSheetData,
 }) => {
-  if (!isOpen) return null;
-
   const [scheduleName, setScheduleName] = useState(config.scheduleName);
   const [cycle, setCycle] = useState(config.cycle || ['work', 'work', 'off', 'off']);
   const [anchorDate, setAnchorDate] = useState(config.anchorDate);
@@ -27,6 +25,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [shiftRate, setShiftRate] = useState(config.shiftRate ? String(config.shiftRate) : '');
   const [hourlyRate, setHourlyRate] = useState(config.hourlyRate ? String(config.hourlyRate) : '');
   const [confirmRestore, setConfirmRestore] = useState(false);
+
+  if (!isOpen) return null;
 
   const PRESETS: { label: string; name: string; cycle: any[] }[] = [
     { label: '2/2', name: 'График 2/2', cycle: ['work', 'work', 'off', 'off'] },

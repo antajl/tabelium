@@ -127,3 +127,15 @@ export interface MonthStatistics {
   estimatedNightHours: number;
   estimatedPay?: number;
 }
+
+export interface YearStatistics {
+  workDaysCount: number;
+  overtimeDaysCount: number;
+  totalNightShifts: number;
+  doublePayShiftsCount: number;
+  vacationDaysCount: number;
+  offDaysCount: number;
+  estimatedHours: number;
+  estimatedNightHours: number;
+  estimatedPay?: number;
+}

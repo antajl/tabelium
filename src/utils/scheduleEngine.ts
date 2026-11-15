@@ -6,6 +6,7 @@ import type {
   MonthStatistics,
   ShiftType,
   UserScheduleConfig,
+  YearStatistics,
 } from '../types/schedule';
 import { getRussianHolidayInfo } from '../data/holidays';
 import initialScheduleData from '../data/initialSchedule.json';
@@ -143,6 +144,27 @@ export function loadInitialColleagues(): Colleague[] {
       colorTheme: 'blue',
       vacations: [
         {
+          id: 'max-vac-2026-1',
+          startDate: '2026-03-18',
+          daysCount: 7,
+          endDate: addDaysToDate('2026-03-18', 7),
+          note: 'Весенний отпуск',
+        },
+        {
+          id: 'max-vac-2026-2',
+          startDate: '2026-07-04',
+          daysCount: 23,
+          endDate: addDaysToDate('2026-07-04', 23),
+          note: 'Основной летний отпуск',
+        },
+        {
+          id: 'max-vac-2026-3',
+          startDate: '2026-10-04',
+          daysCount: 7,
+          endDate: addDaysToDate('2026-10-04', 7),
+          note: 'Осенний отпуск',
+        },
+        {
           id: 'max-vac-1',
           startDate: '2027-03-17',
           daysCount: 7,
@@ -265,6 +287,78 @@ export function calculateMonthStatistics(
     if (day.isDoublePay) {
       doublePayShiftsCount++;
     }
+  }
+
+  const totalNightShifts = workDaysCount + overtimeDaysCount;
+  const estimatedHours = totalNightShifts * config.shiftDurationHours;
+  const estimatedNightHours = totalNightShifts * config.nightHoursPerShift;
+
+  let estimatedPay: number | undefined = undefined;
+  if (config.shiftRate && config.shiftRate > 0) {
+    estimatedPay = (totalNightShifts * config.shiftRate) + (doublePayShiftsCount * config.shiftRate);
+  } else if (config.hourlyRate && config.hourlyRate > 0) {
+    const regularPay = estimatedHours * config.hourlyRate;
+    const nightSurcharge = estimatedNightHours * (config.hourlyRate * 0.2);
+    const doublePayBonus = doublePayShiftsCount * config.shiftDurationHours * config.hourlyRate;
+    estimatedPay = regularPay + nightSurcharge + doublePayBonus;
+  }
+
+  return {
+    workDaysCount,
+    overtimeDaysCount,
+    totalNightShifts,
+    doublePayShiftsCount,
+    vacationDaysCount,
+    offDaysCount,
+    estimatedHours,
+    estimatedNightHours,
+    estimatedPay,
+  };
+}
+
+export interface YearMonthData {
+  month: number; // 1-12
+  monthName: string;
+  days: DayShiftInfo[];
+  stats: MonthStatistics;
+}
+
+export function getYearMonthsData(
+  year: number,
+  config: UserScheduleConfig,
+  overrides: Record<string, DayOverride>,
+  colleagues?: Colleague[]
+): YearMonthData[] {
+  const months: YearMonthData[] = [];
+  for (let m = 1; m <= 12; m++) {
+    const days = getMonthDays(year, m, config, overrides, colleagues);
+    const stats = calculateMonthStatistics(days, config);
+    months.push({
+      month: m,
+      monthName: RUSSIAN_MONTH_NAMES[m - 1],
+      days,
+      stats,
+    });
+  }
+  return months;
+}
+
+export function calculateYearStatistics(
+  monthsData: YearMonthData[],
+  config: UserScheduleConfig
+): YearStatistics {
+  let workDaysCount = 0;
+  let overtimeDaysCount = 0;
+  let doublePayShiftsCount = 0;
+  let vacationDaysCount = 0;
+  let offDaysCount = 0;
+
+  for (const m of monthsData) {
+    workDaysCount += m.stats.workDaysCount;
+    overtimeDaysCount += m.stats.overtimeDaysCount;
+    doublePayShiftsCount += m.stats.doublePayShiftsCount;
+    vacationDaysCount += m.stats.vacationDaysCount;
+    offDaysCount += m.stats.offDaysCount;
   }
 
   const totalNightShifts = workDaysCount + overtimeDaysCount;
