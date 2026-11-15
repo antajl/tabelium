@@ -159,7 +159,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     >
       {/* Single Horizontal Toolbar Line */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf] relative z-20">
-        {/* Left: Back to Year, Navigation, Dropdown, Divider, Inline Legend */}
+        {/* Left: Back to Year, Navigation, Dropdown */}
         <div className="flex items-center gap-2 flex-wrap">
           {onBackToYear && (
             <button
@@ -168,7 +168,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               title={`Вернуться к обзору ${year} года`}
             >
               <ArrowLeft className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={2} />
-              <span>← {year} год</span>
+              <span>{year} год</span>
             </button>
           )}
 
@@ -196,31 +196,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             >
               <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
-          </div>
-
-          <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block mx-1" />
-
-          {/* Inline Legend (On the exact same row) */}
-          <div className="flex items-center gap-3 text-xs flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#d32f2f] shrink-0" />
-              <span className="font-semibold text-[#93231c]">Работа</span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
-              <span className="font-semibold text-[#7f1d1d]">Подработка</span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2e7d32] shrink-0" />
-              <span className="font-semibold text-[#215128]">Выходной</span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#e5a100] shrink-0" />
-              <span className="font-semibold text-[#7d5600]">Отпуск</span>
-            </div>
           </div>
         </div>
 

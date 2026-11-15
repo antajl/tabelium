@@ -448,13 +448,15 @@ export const App: React.FC = () => {
   return (
     <div
       className={`bg-[#faf8f4] text-[#252320] flex flex-col font-sans antialiased ${
-        viewMode === 'year' ? 'h-screen overflow-hidden' : 'min-h-screen'
+        viewMode === 'year'
+          ? 'h-screen overflow-y-auto overflow-x-hidden'
+          : 'min-h-screen'
       }`}
     >
       <main
         className={`flex-1 max-w-[1700px] w-full mx-auto px-2 sm:px-4 lg:px-6 ${
           viewMode === 'year'
-            ? 'p-2 sm:p-2.5 h-full overflow-hidden flex flex-col'
+            ? 'p-1.5 sm:p-2.5 h-full min-h-[580px] flex flex-col'
             : 'p-3 sm:py-4'
         }`}
       >

@@ -130,7 +130,7 @@ export const YearView: React.FC<YearViewProps> = ({
     <div
       className={
         isFitScreen
-          ? 'h-full flex flex-col justify-between gap-1.5 sm:gap-2'
+          ? 'h-full min-h-[640px] flex flex-col justify-between gap-1.5 sm:gap-2'
           : 'flex flex-col gap-3 sm:gap-3.5'
       }
     >
@@ -342,7 +342,7 @@ export const YearView: React.FC<YearViewProps> = ({
       <div
         className={
           isFitScreen
-            ? 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-12 md:grid-rows-6 lg:grid-rows-4 xl:grid-rows-3 gap-2 p-0.5 sm:p-1'
+            ? 'flex-1 min-h-[560px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-12 md:grid-rows-6 lg:grid-rows-4 xl:grid-rows-3 gap-2 p-0.5 sm:p-1'
             : is6x2
             ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2'
             : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5'
@@ -366,9 +366,9 @@ export const YearView: React.FC<YearViewProps> = ({
                 if ((e.target as HTMLElement).closest('button[data-day]')) return;
                 handleMonthClick(mData.month);
               }}
-              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer ${
+              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer overflow-hidden ${
                 isFitScreen
-                  ? 'h-full min-h-0 p-1.5 sm:p-2'
+                  ? 'h-full min-h-[135px] p-1.5 sm:p-2'
                   : 'p-2 sm:p-2.5'
               } ${
                 isExpanding
@@ -484,8 +484,8 @@ export const YearView: React.FC<YearViewProps> = ({
                       }`}
                       className={`${
                         isFitScreen
-                          ? 'h-full min-h-0 rounded p-0.5'
-                          : 'aspect-[1/0.8] rounded p-0.5'
+                          ? 'h-full min-h-0 rounded p-0.5 overflow-hidden'
+                          : 'aspect-[1/0.8] rounded p-0.5 overflow-hidden'
                       } flex flex-col items-center justify-between text-[10px] font-medium border relative transition cursor-pointer active:scale-95 ${
                         shiftDef.colorBg
                       } ${shiftDef.colorBorder} ${shiftDef.colorText} ${
@@ -494,17 +494,17 @@ export const YearView: React.FC<YearViewProps> = ({
                           : ''
                       } ${
                         day.isToday
-                          ? 'ring-2 ring-[#b68231] outline outline-1 outline-[#b68231] outline-offset-1 font-bold z-10 !opacity-100 !grayscale-0'
+                          ? 'ring-2 ring-inset ring-[#b68231] font-bold z-10 !opacity-100 !grayscale-0'
                           : ''
                       } ${
                         matchesFilter
-                          ? 'ring-2 ring-[#b68231] ring-offset-1 font-bold scale-105 z-10 shadow-xs'
+                          ? 'ring-2 ring-inset ring-[#b68231] font-bold z-10 shadow-xs'
                           : ''
                       } ${isFaded ? 'opacity-35 grayscale-[50%]' : 'hover:scale-105 hover:z-10'}`}
                     >
                       {/* Day number & 2X marker */}
-                      <div className="w-full flex items-center justify-between leading-none px-0.5">
-                        <span className="text-[9px] sm:text-[10px]">{day.dayNumber}</span>
+                      <div className="w-full flex items-center justify-between leading-none px-0.5 shrink-0">
+                        <span className="text-[9px] sm:text-[10px] font-semibold">{day.dayNumber}</span>
                         {day.isDoublePay && (
                           <span
                             className="text-[7px] font-black text-[#9d4c37] leading-none"
@@ -517,7 +517,7 @@ export const YearView: React.FC<YearViewProps> = ({
 
                       {/* Colleague Vacations Indicator (colored dots or bars) */}
                       {hasColleagueVacation && (
-                        <div className="flex items-center justify-center gap-0.5 w-full mt-auto pb-0.5">
+                        <div className="absolute bottom-0.5 left-0 right-0 flex items-center justify-center gap-0.5 pointer-events-none px-0.5">
                           {day.colleagueVacations!.map((cv) => {
                             const theme = getColleagueTheme(cv.colorTheme);
                             return (
