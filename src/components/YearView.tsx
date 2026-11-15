@@ -82,6 +82,8 @@ export const YearView: React.FC<YearViewProps> = ({
   const currentRealMonthName = RUSSIAN_MONTH_NAMES[currentRealMonth - 1];
 
   const [highlightedMonth, setHighlightedMonth] = useState<number | null>(null);
+  const [currentMonthInView, setCurrentMonthInView] = useState<boolean>(true);
+  const [scrollDirectionToCurrent, setScrollDirectionToCurrent] = useState<'down' | 'up' | null>(null);
   const hasAutoScrolledRef = useRef(false);
 
   const scrollToMonth = (m: number, smooth = true) => {
@@ -121,6 +123,40 @@ export const YearView: React.FC<YearViewProps> = ({
       return () => clearTimeout(timer);
     }
   }, [activeTransitionMonth, isCurrentYear, currentRealMonth]);
+
+  // Track if current month is in viewport on mobile for the floating quick jump button
+  useEffect(() => {
+    if (!isCurrentYear) {
+      setCurrentMonthInView(true);
+      return;
+    }
+
+    const checkVisibility = () => {
+      const el = document.getElementById(`month-card-${currentRealMonth}`);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+
+      const isVisible = rect.bottom > 80 && rect.top < windowHeight - 80;
+      setCurrentMonthInView(isVisible);
+
+      if (!isVisible) {
+        if (rect.top >= windowHeight - 80) {
+          setScrollDirectionToCurrent('down');
+        } else {
+          setScrollDirectionToCurrent('up');
+        }
+      }
+    };
+
+    checkVisibility();
+    window.addEventListener('scroll', checkVisibility, { passive: true });
+    window.addEventListener('resize', checkVisibility, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', checkVisibility);
+      window.removeEventListener('resize', checkVisibility);
+    };
+  }, [isCurrentYear, currentRealMonth]);
 
   const handleMonthClick = (m: number) => {
     if (expandingMonth !== null) return;

@@ -11,7 +11,6 @@ import {
   Settings,
   Download,
   Eye,
-  Sparkles,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
@@ -104,6 +103,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
     setTooltipPos({ top, left, isAbove, arrowX });
   }, [hoveredHoliday]);
+
+  // Scroll to top on month view mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
+  }, []);
 
   // Dismiss holiday tooltip immediately on scroll, resize or when selecting
   useEffect(() => {
