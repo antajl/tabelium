@@ -353,6 +353,7 @@ export const YearView: React.FC<YearViewProps> = ({
           const blankDaysCount = firstDayOfWeek - 1;
           const isExpanding = expandingMonth === mData.month;
           const isTransitionTarget = mData.month === (activeTransitionMonth ?? 1);
+          const isCurrentMonth = mData.days.some((d) => d.isToday);
 
           return (
             <div
@@ -372,6 +373,8 @@ export const YearView: React.FC<YearViewProps> = ({
               } ${
                 isExpanding
                   ? 'bg-white scale-[1.04] shadow-2xl ring-4 ring-[#b68231] border-[#b68231] z-30 opacity-90'
+                  : isCurrentMonth
+                  ? 'bg-white ring-2 ring-[#b68231] outline outline-1 outline-[#b68231] outline-offset-1 border-[#b68231] shadow-[0_4px_14px_rgba(182,130,49,0.12)] hover:shadow-lg hover:scale-[1.01] z-10'
                   : 'bg-white border border-[#e7ddcf] shadow-[0_2px_8px_rgba(45,30,15,0.03)] hover:shadow-lg hover:border-[#d8b57a] hover:scale-[1.01]'
               }`}
             >
@@ -384,7 +387,13 @@ export const YearView: React.FC<YearViewProps> = ({
                 className="group/mhdr flex items-center justify-between gap-1 border-b border-[#f2ede4] cursor-pointer shrink-0 mb-1 pb-1"
                 title={`Кликните, чтобы открыть ${mData.monthName}`}
               >
-                <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-[#252320] group-hover/mhdr:text-[#b68231] transition">
+                <div
+                  className={`flex items-center gap-1.5 font-bold text-xs sm:text-sm transition ${
+                    isCurrentMonth
+                      ? 'text-[#b68231]'
+                      : 'text-[#252320] group-hover/mhdr:text-[#b68231]'
+                  }`}
+                >
                   <span>{mData.monthName}</span>
                 </div>
 
