@@ -9,7 +9,6 @@ import {
   Settings,
   Download,
   Eye,
-  Sparkles,
   Palmtree,
   Calendar,
   ArrowDown,
@@ -737,11 +736,17 @@ export const YearView: React.FC<YearViewProps> = ({
           </div>
 
           {hoveredDay.day.holidayName && (
-            <div className="text-[10px] text-[#f3e7d5] flex items-center gap-1.5 pt-0.5">
-              <Sparkles className="w-3 h-3 text-[#b68231] shrink-0" strokeWidth={1.75} />
-              <span className="font-medium">{hoveredDay.day.holidayName}</span>
-              {hoveredDay.day.isDoublePay && (
-                <span className="font-bold text-[#efc8b4] ml-auto">(2X оплата)</span>
+            <div className="text-[10px] text-[#f3e7d5] flex flex-col gap-0.5 pt-1 border-t border-white/10">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium">{hoveredDay.day.holidayFullName || hoveredDay.day.holidayName}</span>
+                {hoveredDay.day.isDoublePay && (
+                  <span className="font-bold text-[#efc8b4] ml-auto shrink-0">(2X)</span>
+                )}
+              </div>
+              {hoveredDay.day.holidayDescription && (
+                <div className="text-[9px] text-[#c4b5a0] leading-tight">
+                  {hoveredDay.day.holidayDescription}
+                </div>
               )}
             </div>
           )}

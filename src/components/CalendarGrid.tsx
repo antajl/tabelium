@@ -562,15 +562,20 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             left: tooltipPos.left,
           }}
         >
-          {/* Header: Sparkles icon + Badge */}
+          {/* Header: Title + Badge (No emojis) */}
           <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#f3e7d5]">
-              <Sparkles className="w-3.5 h-3.5 text-[#b68231] shrink-0" strokeWidth={1.75} />
-              <span>Праздник РФ</span>
-            </div>
+            <span className="text-[11px] font-semibold text-[#f3e7d5]">
+              {hoveredHoliday.day.holidayCategory === 'transfer'
+                ? 'Перенос выходного'
+                : 'Праздник РФ'}
+            </span>
             {hoveredHoliday.day.isDoublePay ? (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#9d4c37] text-white shadow-2xs">
                 2X Двойная оплата
+              </span>
+            ) : hoveredHoliday.day.holidayCategory === 'transfer' ? (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
+                Пост. Правительства РФ
               </span>
             ) : (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
@@ -581,14 +586,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
           {/* Holiday Name */}
           <div className="text-xs sm:text-[13px] font-bold text-[#faf8f4] leading-snug">
-            {hoveredHoliday.day.holidayName}
+            {hoveredHoliday.day.holidayFullName || hoveredHoliday.day.holidayName}
           </div>
 
-          {/* Subtitle / TK RF Description */}
+          {/* Subtitle / Reason / Law reference */}
           <div className="text-[10px] text-[#c4b5a0] leading-relaxed">
-            {hoveredHoliday.day.isDoublePay
-              ? 'Официальный праздничный день. Работа и подработка оплачиваются в двойном размере (2X).'
-              : 'Официальный нерабочий праздничный день в соответствии с Трудовым кодексом РФ.'}
+            {hoveredHoliday.day.holidayDescription ||
+              (hoveredHoliday.day.isDoublePay
+                ? 'Официальный праздничный день. Работа и подработка оплачиваются в двойном размере (2X).'
+                : 'Официальный нерабочий праздничный день в соответствии с Трудовым кодексом РФ.')}
           </div>
 
           {/* Optional Note preview if present */}

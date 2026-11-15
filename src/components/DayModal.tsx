@@ -217,12 +217,25 @@ export const DayModal: React.FC<DayModalProps> = ({
 
       {/* Holiday Alert */}
       {day.isHoliday && (
-        <div className="mt-2.5 p-2 rounded-xl bg-[#fbf4f0] border border-[#efc8b4] text-[11px] text-[#9d4c37] flex items-center gap-1.5 shadow-2xs">
-          <AlertCircle className="w-3.5 h-3.5 text-[#9d4c37] shrink-0" strokeWidth={1.5} />
-          <span className="font-semibold truncate">{day.holidayName || 'Праздник РФ'}</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#f3e7d5] text-[#7b511c] font-bold border border-[#d8b57a] ml-auto shrink-0">
-            2X
-          </span>
+        <div className="mt-2.5 p-2 rounded-xl bg-[#fbf4f0] border border-[#efc8b4] text-[11px] text-[#9d4c37] flex flex-col gap-1 shadow-2xs">
+          <div className="flex items-center gap-1.5 font-semibold">
+            <AlertCircle className="w-3.5 h-3.5 text-[#9d4c37] shrink-0" strokeWidth={1.5} />
+            <span className="truncate">{day.holidayFullName || day.holidayName || 'Праздник РФ'}</span>
+            {day.isDoublePay ? (
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#f3e7d5] text-[#7b511c] font-bold border border-[#d8b57a] ml-auto shrink-0">
+                2X
+              </span>
+            ) : day.holidayCategory === 'transfer' ? (
+              <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#f3e7d5] text-[#7b511c] font-medium border border-[#d8b57a] ml-auto shrink-0">
+                Перенос
+              </span>
+            ) : null}
+          </div>
+          {day.holidayDescription && (
+            <div className="text-[10px] text-[#81796e] pl-5 leading-tight">
+              {day.holidayDescription}
+            </div>
+          )}
         </div>
       )}
 
