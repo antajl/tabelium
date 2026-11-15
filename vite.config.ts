@@ -5,6 +5,7 @@ import { cloudflareTunnelPlugin } from './vite-plugin-cloudflared.ts';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.GITHUB_PAGES ? '/tabelium/' : '/',
   plugins: [
     react(),
     tailwindcss(),

@@ -46,7 +46,13 @@ function parseRoute(
   }
 
   // 1. Path-based routing: /YYYY or /YYYY/MM (e.g. /2025, /2026, /2026/10, /2026/05, /2026/5)
-  const cleanPath = pathname.replace(/^\/+|\/+$/g, '');
+  // Strip optional base path prefix (e.g. /tabelium/)
+  const basePath = (import.meta.env.BASE_URL || '/').replace(/^\/+|\/+$/g, '');
+  let cleanPath = pathname.replace(/^\/+|\/+$/g, '');
+  if (basePath && (cleanPath === basePath || cleanPath.startsWith(basePath + '/'))) {
+    cleanPath = cleanPath.slice(basePath.length).replace(/^\/+|\/+$/g, '');
+  }
+
   if (cleanPath) {
     const parts = cleanPath.split('/');
     // Format /YYYY
@@ -90,11 +96,13 @@ function parseRoute(
 }
 
 function formatRouteUrl(view: 'month' | 'year', year: number, month: number): string {
+  const rawBase = (import.meta.env.BASE_URL || '/').replace(/^\/+|\/+$/g, '');
+  const prefix = rawBase ? `/${rawBase}` : '';
   if (view === 'month') {
     const mStr = String(month).padStart(2, '0');
-    return `/${year}/${mStr}`;
+    return `${prefix}/${year}/${mStr}`;
   }
-  return `/${year}`;
+  return `${prefix}/${year}`;
 }
 
 function updateBrowserUrl(
