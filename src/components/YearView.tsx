@@ -452,33 +452,6 @@ export const YearView: React.FC<YearViewProps> = ({
             </div>
           )}
         </div>
-        {/* Mobile Quick Month Strip (xl:hidden) - 1-tap jump to any month */}
-        <div className="xl:hidden flex items-center gap-1.5 pt-2 border-t border-[#f2ede4] text-xs">
-          <span className="text-[11px] font-semibold text-[#81796e] shrink-0 hidden sm:inline">
-            Месяцы:
-          </span>
-          <div className="inline-flex items-center h-7.5 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs text-xs overflow-x-auto overflow-y-hidden w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-0.5">
-            {monthsData.map((mData) => {
-              const isCurrent = isCurrentYear && mData.month === currentRealMonth;
-              return (
-                <button
-                  key={mData.month}
-                  onClick={() => scrollToMonth(mData.month, true)}
-                  onDoubleClick={() => handleMonthClick(mData.month)}
-                  title={`${mData.monthName} — кликните для перехода, двойной клик для открытия`}
-                  className={`h-full px-2 sm:px-2.5 rounded-md font-medium text-[11px] sm:text-xs transition cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
-                    isCurrent
-                      ? 'bg-white text-[#b68231] font-bold shadow-xs border border-[#b68231]/40 ring-1 ring-[#b68231]/30'
-                      : 'text-[#81796e] hover:text-[#252320] hover:bg-white/60'
-                  }`}
-                >
-                  {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-[#b68231] shrink-0" />}
-                  <span>{mData.monthName.slice(0, 3)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       {/* 12 Months Grid: Responsive based on layoutMode */}
