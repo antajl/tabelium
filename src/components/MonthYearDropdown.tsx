@@ -150,15 +150,8 @@ export const MonthYearDropdown: React.FC<MonthYearDropdownProps> = ({
           {/* View Mode: Months */}
           {viewMode === 'months' && (
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-medium text-[#81796e] px-0.5">
-                <span>Месяцы за {selectedYear} год:</span>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('years')}
-                  className="text-[#b68231] hover:underline"
-                >
-                  Сменить год
-                </button>
+              <div className="text-[11px] font-medium text-[#81796e] px-0.5">
+                Месяцы за {selectedYear} год:
               </div>
               <div className="grid grid-cols-3 gap-1.5 p-0.5">
                 {MONTHS_GRID.map((m) => {

@@ -225,10 +225,10 @@ export const App: React.FC = () => {
         onExitReadOnly={handleExitReadOnly}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           {/* Left Column: Calendar (8 cols on lg) */}
-          <div className="lg:col-span-8 flex flex-col gap-4">
+          <div className="lg:col-span-8 flex flex-col gap-3">
             <CalendarGrid
               year={currentYear}
               month={currentMonth}
@@ -246,20 +246,19 @@ export const App: React.FC = () => {
           </div>
 
           {/* Right Column: Month Summary (4 cols on lg) */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          <div className="lg:col-span-4 flex flex-col gap-3">
             <MonthStats
               stats={monthStats}
               month={currentMonth}
               year={currentYear}
               config={config}
             />
+            <div className="text-center text-[11px] text-[#81796e]/70 py-1">
+              Сменограф • График смен • ст. 112 и 153 ТК РФ
+            </div>
           </div>
         </div>
       </main>
-
-      <footer className="py-5 border-t border-[#e7ddcf] text-center text-xs text-[#81796e]">
-        <p>Сменограф • График 2/2 в ночь • ст. 112 и 153 ТК РФ</p>
-      </footer>
 
       <DayModal
         day={selectedDay}
