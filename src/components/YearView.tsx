@@ -84,14 +84,15 @@ export const YearView: React.FC<YearViewProps> = ({
   const [scrollDirectionToCurrent, setScrollDirectionToCurrent] = useState<'down' | 'up' | null>(null);
   const hasAutoScrolledRef = useRef(false);
   const scrollAnimRef = useRef<number | null>(null);
+  const isProgrammaticScrollRef = useRef(false);
 
-  // Smooth inertial scroll animation (approx. 380ms)
+  // Smooth inertial scroll animation (approx. 360ms with zero jank)
   const scrollToMonth = (m: number, smooth = true) => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
       setHighlightedMonth(m);
       setTimeout(() => {
         setHighlightedMonth((prev) => (prev === m ? null : prev));
-      }, 1800);
+      }, 1600);
       return;
     }
 
@@ -105,7 +106,9 @@ export const YearView: React.FC<YearViewProps> = ({
 
     const yOffset = -16;
     const startY = window.pageYOffset || document.documentElement.scrollTop || 0;
-    const targetY = Math.max(0, el.getBoundingClientRect().top + startY + yOffset);
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const rawTargetY = el.getBoundingClientRect().top + startY + yOffset;
+    const targetY = Math.min(Math.max(0, rawTargetY), maxScroll);
     const distance = targetY - startY;
 
     if (!smooth || Math.abs(distance) < 4) {
@@ -113,33 +116,51 @@ export const YearView: React.FC<YearViewProps> = ({
       setHighlightedMonth(m);
       setTimeout(() => {
         setHighlightedMonth((prev) => (prev === m ? null : prev));
-      }, 1800);
+      }, 1600);
       return;
     }
 
-    const duration = 380;
+    isProgrammaticScrollRef.current = true;
+    const duration = 360;
     const startTime = performance.now();
+
+    // easeOutQuart: quick responsive launch with silky smooth zero-stutter landing
+    const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
 
     const step = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // easeInOutCubic: smooth acceleration, fast cruise, gentle deceleration
-      const ease =
-        progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      const ease = easeOutQuart(progress);
 
-      const currentY = startY + distance * ease;
+      const currentY = Math.round(startY + distance * ease);
       window.scrollTo(0, currentY);
 
       if (progress < 1) {
         scrollAnimRef.current = requestAnimationFrame(step);
       } else {
+        window.scrollTo(0, targetY);
         scrollAnimRef.current = null;
-        setHighlightedMonth(m);
+        isProgrammaticScrollRef.current = false;
+
+        // Perform visibility check only after animation has completely finished
+        const targetEl = document.getElementById(`month-card-${currentRealMonth}`);
+        if (targetEl) {
+          const rect = targetEl.getBoundingClientRect();
+          const windowHeight = window.innerHeight;
+          const isVisible = rect.bottom > 80 && rect.top < windowHeight - 80;
+          setCurrentMonthInView(isVisible);
+          if (!isVisible) {
+            setScrollDirectionToCurrent(rect.top >= windowHeight - 80 ? 'down' : 'up');
+          }
+        }
+
+        // Slight 30ms pause before setting highlight to let the frame settle smoothly
         setTimeout(() => {
-          setHighlightedMonth((prev) => (prev === m ? null : prev));
-        }, 1800);
+          setHighlightedMonth(m);
+          setTimeout(() => {
+            setHighlightedMonth((prev) => (prev === m ? null : prev));
+          }, 1600);
+        }, 30);
       }
     };
 
@@ -176,6 +197,9 @@ export const YearView: React.FC<YearViewProps> = ({
     }
 
     const checkVisibility = () => {
+      // Skip visibility recalculations and re-renders during programmatic animation to avoid stutter
+      if (isProgrammaticScrollRef.current) return;
+
       const el = document.getElementById(`month-card-${currentRealMonth}`);
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -567,7 +591,7 @@ export const YearView: React.FC<YearViewProps> = ({
                 isExpanding
                   ? 'bg-white scale-[1.04] shadow-2xl ring-4 ring-[#b68231] border-[#b68231] z-30 opacity-90'
                   : highlightedMonth === mData.month
-                  ? 'bg-white ring-4 ring-[#b68231] outline outline-2 outline-[#b68231] outline-offset-1 border-[#b68231] shadow-2xl scale-[1.01] z-20'
+                  ? 'bg-white ring-2 ring-[#b68231] outline outline-1 outline-[#b68231] outline-offset-1 border-[#b68231] shadow-[0_4px_16px_rgba(182,130,49,0.22)] z-20'
                   : isCurrentMonth
                   ? 'bg-white ring-2 ring-[#b68231] outline outline-1 outline-[#b68231] outline-offset-1 border-[#b68231] shadow-[0_4px_14px_rgba(182,130,49,0.12)] hover:shadow-lg hover:scale-[1.01] z-10'
                   : 'bg-white border border-[#e7ddcf] shadow-[0_2px_8px_rgba(45,30,15,0.03)] hover:shadow-lg hover:border-[#d8b57a] hover:scale-[1.01]'
