@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type {
+  Colleague,
   DayOverride,
   DayShiftInfo,
   ShiftType,
@@ -12,11 +13,13 @@ import {
   formatDateISO,
   generateShareUrl,
   getMonthDays,
+  loadInitialColleagues,
   loadInitialOverrides,
 } from './utils/scheduleEngine';
 import { Navbar } from './components/Navbar';
 import { CalendarGrid } from './components/CalendarGrid';
 import { MonthStats } from './components/MonthStats';
+import { ColleaguesVacationsCard } from './components/ColleaguesVacationsCard';
 import { DayModal } from './components/DayModal';
 import { ShareModal } from './components/ShareModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -24,6 +27,7 @@ import { ExportImportModal } from './components/ExportImportModal';
 
 const CONFIG_STORAGE_KEY = 'smenograf_config_v1';
 const OVERRIDES_STORAGE_KEY = 'smenograf_overrides_v1';
+const COLLEAGUES_STORAGE_KEY = 'smenograf_colleagues_v1';
 
 export const App: React.FC = () => {
   const today = new Date();
@@ -52,6 +56,16 @@ export const App: React.FC = () => {
       console.error(e);
     }
     return loadInitialOverrides();
+  });
+
+  const [colleagues, setColleagues] = useState<Colleague[]>(() => {
+    try {
+      const saved = localStorage.getItem(COLLEAGUES_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return loadInitialColleagues();
   });
 
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
@@ -102,7 +116,17 @@ export const App: React.FC = () => {
     }
   }, [overrides, isReadOnly]);
 
-  const monthDays = getMonthDays(currentYear, currentMonth, config, overrides);
+  useEffect(() => {
+    if (!isReadOnly) {
+      try {
+        localStorage.setItem(COLLEAGUES_STORAGE_KEY, JSON.stringify(colleagues));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [colleagues, isReadOnly]);
+
+  const monthDays = getMonthDays(currentYear, currentMonth, config, overrides, colleagues);
   const monthStats = calculateMonthStatistics(monthDays, config);
 
   const handlePrevMonth = () => {
@@ -248,7 +272,7 @@ export const App: React.FC = () => {
             />
           </div>
 
-          {/* Right Column: Month Summary (4 cols on lg) */}
+          {/* Right Column: Month Summary & Colleagues Vacations (4 cols on lg) */}
           <div className="lg:col-span-4 flex flex-col gap-3">
             <MonthStats
               stats={monthStats}
@@ -256,6 +280,19 @@ export const App: React.FC = () => {
               year={currentYear}
               config={config}
             />
+
+            <ColleaguesVacationsCard
+              colleagues={colleagues}
+              currentYear={currentYear}
+              currentMonth={currentMonth}
+              isReadOnly={isReadOnly}
+              onUpdateColleagues={setColleagues}
+              onNavigateToPeriod={(y, m) => {
+                setCurrentYear(y);
+                setCurrentMonth(m);
+              }}
+            />
+
             <div className="text-center text-[11px] text-[#81796e]/70 py-1">
               Сменограф • График смен • ст. 112 и 153 ТК РФ
             </div>
@@ -299,9 +336,11 @@ export const App: React.FC = () => {
         onClose={() => setIsExportImportOpen(false)}
         config={config}
         overrides={overrides}
-        onImportData={({ config: newCfg, overrides: newOvr }) => {
+        colleagues={colleagues}
+        onImportData={({ config: newCfg, overrides: newOvr, colleagues: newColleagues }) => {
           setConfig(newCfg);
           setOverrides(newOvr);
+          if (newColleagues) setColleagues(newColleagues);
         }}
       />
     </div>

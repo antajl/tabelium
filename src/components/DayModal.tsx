@@ -5,6 +5,7 @@ import {
   Check,
   AlertCircle,
   Calendar,
+  Users,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
@@ -221,6 +222,29 @@ export const DayModal: React.FC<DayModalProps> = ({
           <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#f3e7d5] text-[#7b511c] font-bold border border-[#d8b57a] ml-auto shrink-0">
             2X
           </span>
+        </div>
+      )}
+
+      {/* Colleague Vacations Alert */}
+      {day.colleagueVacations && day.colleagueVacations.length > 0 && (
+        <div className="mt-2.5 p-2 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] text-[11px] text-[#1e40af] flex flex-col gap-1 shadow-2xs">
+          <div className="font-semibold flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-[#2563eb] shrink-0" strokeWidth={1.5} />
+            <span>Отпуск коллег в этот день:</span>
+          </div>
+          {day.colleagueVacations.map((cv) => (
+            <div
+              key={cv.colleagueId + cv.vacationId}
+              className="flex items-center justify-between pl-5 text-[10px]"
+            >
+              <span>
+                <strong>{cv.colleagueName}</strong> ({cv.startDate} — {cv.endDate})
+              </span>
+              <span className="font-semibold text-[#2563eb]">
+                день {cv.dayIndex} из {cv.totalDays}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 

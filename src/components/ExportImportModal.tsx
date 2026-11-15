@@ -1,13 +1,18 @@
 import React, { useRef, useState } from 'react';
 import { X, Download, Upload, FileJson, Check, AlertCircle } from 'lucide-react';
-import type { DayOverride, UserScheduleConfig } from '../types/schedule';
+import type { Colleague, DayOverride, UserScheduleConfig } from '../types/schedule';
 
 interface ExportImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   config: UserScheduleConfig;
   overrides: Record<string, DayOverride>;
-  onImportData: (data: { config: UserScheduleConfig; overrides: Record<string, DayOverride> }) => void;
+  colleagues?: Colleague[];
+  onImportData: (data: {
+    config: UserScheduleConfig;
+    overrides: Record<string, DayOverride>;
+    colleagues?: Colleague[];
+  }) => void;
 }
 
 export const ExportImportModal: React.FC<ExportImportModalProps> = ({
@@ -15,6 +20,7 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
   onClose,
   config,
   overrides,
+  colleagues,
   onImportData,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,10 +31,11 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
 
   const handleExport = () => {
     const data = {
-      version: '1.0',
+      version: '1.1',
       exportedAt: new Date().toISOString(),
       config,
       overrides,
+      colleagues,
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -52,12 +59,13 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
       try {
         const text = event.target?.result as string;
         const parsed = JSON.parse(text);
-        if (!parsed.overrides) {
+        if (!parsed.overrides && !parsed.config) {
           throw new Error('Некорректный формат файла бэкапа');
         }
         onImportData({
           config: parsed.config || config,
           overrides: parsed.overrides || {},
+          colleagues: parsed.colleagues,
         });
         setSuccessMsg('График успешно импортирован');
         setTimeout(() => {

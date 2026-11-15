@@ -171,7 +171,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block mx-1" />
 
           {/* Inline Legend (On the exact same row) */}
-          <div className="flex items-center gap-2.5 text-xs">
+          <div className="flex items-center gap-2.5 text-xs flex-wrap">
             <div className="flex items-center gap-1">
               <span className="w-2.5 h-2.5 rounded-full bg-[#d32f2f] shrink-0" />
               <span className="font-semibold text-[#93231c]">Работа</span>
@@ -189,7 +189,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
             <div className="flex items-center gap-1">
               <span className="w-2.5 h-2.5 rounded-full bg-[#e5a100] shrink-0" />
-              <span className="font-semibold text-[#7d5600]">Отпуск</span>
+              <span className="font-semibold text-[#7d5600]">Мой отпуск</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb] shrink-0" />
+              <span className="font-semibold text-[#1e40af]">Отпуск коллег</span>
             </div>
           </div>
         </div>
@@ -298,12 +303,27 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 </div>
               </div>
 
-              {/* Center Area: only shown for Overtime to clearly identify extra shift */}
-              <div className="flex items-center justify-center my-auto">
+              {/* Center Area: Overtime / Colleague Vacations */}
+              <div className="flex flex-col items-center justify-center gap-1 my-auto w-full overflow-hidden">
                 {day.status === 'overtime' && (
                   <span className="text-[10px] sm:text-xs font-bold text-[#7f1d1d] px-1.5 py-0.5 rounded-md bg-[#fbdcd9] border border-[#e57373] border-dashed">
                     Подработка
                   </span>
+                )}
+
+                {day.colleagueVacations && day.colleagueVacations.length > 0 && (
+                  <div className="flex flex-col gap-0.5 w-full">
+                    {day.colleagueVacations.map((cv) => (
+                      <div
+                        key={cv.colleagueId + cv.vacationId}
+                        className="flex items-center justify-between px-1.5 py-0.5 rounded-md bg-[#eff6ff] border border-[#bfdbfe] text-[#1e40af] text-[9px] sm:text-[10px] font-semibold leading-tight shadow-2xs truncate"
+                        title={`Отпуск коллеги: ${cv.colleagueName} (${cv.startDate} — ${cv.endDate}, день ${cv.dayIndex} из ${cv.totalDays})`}
+                      >
+                        <span className="truncate">{cv.colleagueName}</span>
+                        <span className="text-[8px] sm:text-[9px] opacity-75 shrink-0 ml-1">отпуск</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 

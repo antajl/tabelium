@@ -85,6 +85,33 @@ export interface DayShiftInfo {
   note?: string;
   isToday: boolean;
   isPast: boolean;
+  colleagueVacations?: ColleagueVacationOccurrence[];
+}
+
+export interface ColleagueVacation {
+  id: string;
+  startDate: string; // YYYY-MM-DD
+  daysCount: number; // number of calendar days
+  endDate: string; // YYYY-MM-DD (inclusive)
+  note?: string;
+}
+
+export interface Colleague {
+  id: string;
+  name: string; // e.g. "Макс", "Лёха"
+  role?: string; // e.g. "Напарник", "Коллега"
+  color?: string; // blue shade or tag
+  vacations: ColleagueVacation[];
+}
+
+export interface ColleagueVacationOccurrence {
+  colleagueId: string;
+  colleagueName: string;
+  vacationId: string;
+  startDate: string;
+  endDate: string;
+  dayIndex: number; // 1-based index (e.g. day 1 of 7)
+  totalDays: number;
 }
 
 export interface MonthStatistics {

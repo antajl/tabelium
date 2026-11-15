@@ -1,4 +1,6 @@
 import type {
+  Colleague,
+  ColleagueVacationOccurrence,
   DayOverride,
   DayShiftInfo,
   MonthStatistics,
@@ -57,6 +59,98 @@ export function daysBetween(dateStrA: string, dateStrB: string): number {
   return Math.round((utcB - utcA) / MS_PER_DAY);
 }
 
+export function addDaysToDate(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + days - 1); // inclusive end date
+  const resY = dt.getUTCFullYear();
+  const resM = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const resD = String(dt.getUTCDate()).padStart(2, '0');
+  return `${resY}-${resM}-${resD}`;
+}
+
+export function getColleagueVacationsForDate(
+  dateStr: string,
+  colleagues: Colleague[]
+): ColleagueVacationOccurrence[] {
+  const occurrences: ColleagueVacationOccurrence[] = [];
+
+  for (const colleague of colleagues) {
+    for (const vac of colleague.vacations) {
+      if (dateStr >= vac.startDate && dateStr <= vac.endDate) {
+        const dayIdx = daysBetween(vac.startDate, dateStr) + 1;
+        occurrences.push({
+          colleagueId: colleague.id,
+          colleagueName: colleague.name,
+          vacationId: vac.id,
+          startDate: vac.startDate,
+          endDate: vac.endDate,
+          dayIndex: dayIdx,
+          totalDays: vac.daysCount,
+        });
+      }
+    }
+  }
+
+  return occurrences;
+}
+
+export function loadInitialColleagues(): Colleague[] {
+  return [
+    {
+      id: 'max',
+      name: 'Макс',
+      role: 'Напарник',
+      color: '#2563eb',
+      vacations: [
+        {
+          id: 'max-vac-1',
+          startDate: '2027-03-17',
+          daysCount: 7,
+          endDate: addDaysToDate('2027-03-17', 7),
+          note: 'Весенний отпуск',
+        },
+        {
+          id: 'max-vac-2',
+          startDate: '2027-06-01',
+          daysCount: 23,
+          endDate: addDaysToDate('2027-06-01', 23),
+          note: 'Основной летний отпуск',
+        },
+        {
+          id: 'max-vac-3',
+          startDate: '2027-10-03',
+          daysCount: 7,
+          endDate: addDaysToDate('2027-10-03', 7),
+          note: 'Осенний отпуск',
+        },
+      ],
+    },
+    {
+      id: 'lekha',
+      name: 'Лёха',
+      role: 'Коллега',
+      color: '#3b82f6',
+      vacations: [
+        {
+          id: 'lekha-vac-1',
+          startDate: '2027-01-11',
+          daysCount: 14,
+          endDate: addDaysToDate('2027-01-11', 14),
+          note: 'Зимний отпуск',
+        },
+        {
+          id: 'lekha-vac-2',
+          startDate: '2027-07-23',
+          daysCount: 14,
+          endDate: addDaysToDate('2027-07-23', 14),
+          note: 'Летний отпуск',
+        },
+      ],
+    },
+  ];
+}
+
 export function getBaseCycleShift(dateStr: string, config: UserScheduleConfig): ShiftType {
   const diff = daysBetween(config.anchorDate, dateStr);
   const cycleLen = config.cycle.length;
@@ -68,7 +162,8 @@ export function getMonthDays(
   year: number,
   month: number, // 1-12
   config: UserScheduleConfig,
-  overrides: Record<string, DayOverride>
+  overrides: Record<string, DayOverride>,
+  colleagues?: Colleague[]
 ): DayShiftInfo[] {
   const daysInMonth = new Date(year, month, 0).getDate();
   const todayStr = getTodayISO();
@@ -89,6 +184,7 @@ export function getMonthDays(
     const isToday = dateStr === todayStr;
 
     const isDoublePay = holidayInfo.isDoublePayEligible && (status === 'work' || status === 'overtime');
+    const colleagueVacations = colleagues ? getColleagueVacationsForDate(dateStr, colleagues) : undefined;
 
     days.push({
       dateStr,
@@ -104,6 +200,7 @@ export function getMonthDays(
       note: override?.note,
       isToday,
       isPast,
+      colleagueVacations,
     });
   }
 
