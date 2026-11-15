@@ -127,15 +127,44 @@ function updateBrowserUrl(
   }
 }
 
-function startMorphTransition(updateCallback: () => void) {
+function resetScrollToTop() {
+  if (typeof window === 'undefined') return;
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+}
+
+function scrollToMonthCardInstant(month: number) {
+  if (typeof window === 'undefined' || window.innerWidth >= 1280) return;
+  const el = document.getElementById(`month-card-${month}`);
+  if (el) {
+    const yOffset = -16;
+    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    const targetTop = Math.max(0, y);
+    window.scrollTo({ top: targetTop, behavior: 'instant' });
+    if (document.documentElement) document.documentElement.scrollTop = targetTop;
+    if (document.body) document.body.scrollTop = targetTop;
+  }
+}
+
+function startMorphTransition(
+  updateCallback: () => void,
+  postSyncCallback?: () => void
+) {
   if (typeof document !== 'undefined' && 'startViewTransition' in document) {
     (document as any).startViewTransition(() => {
       flushSync(() => {
         updateCallback();
       });
+      if (postSyncCallback) {
+        postSyncCallback();
+      }
     });
   } else {
     updateCallback();
+    if (postSyncCallback) {
+      postSyncCallback();
+    }
   }
 }
 
@@ -233,6 +262,9 @@ export const App: React.FC = () => {
   const [isExportImportOpen, setIsExportImportOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
     updateBrowserUrl(viewMode, currentYear, currentMonth, true);
 
     const handlePopState = () => {
@@ -244,13 +276,23 @@ export const App: React.FC = () => {
         : route.month;
 
       setActiveTransitionMonth(targetMonth);
-      startMorphTransition(() => {
-        setCurrentYear(route.year);
-        if (route.view === 'month') {
-          setCurrentMonth(route.month);
+      startMorphTransition(
+        () => {
+          setCurrentYear(route.year);
+          if (route.view === 'month') {
+            setCurrentMonth(route.month);
+            resetScrollToTop();
+          }
+          setViewMode(route.view);
+        },
+        () => {
+          if (route.view === 'year') {
+            scrollToMonthCardInstant(targetMonth);
+          } else if (route.view === 'month') {
+            resetScrollToTop();
+          }
         }
-        setViewMode(route.view);
-      });
+      );
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -313,18 +355,29 @@ export const App: React.FC = () => {
   const handleOpenMonthFromYear = (month: number) => {
     setActiveTransitionMonth(month);
     updateBrowserUrl('month', currentYear, month, false);
-    startMorphTransition(() => {
-      setCurrentMonth(month);
-      setViewMode('month');
-    });
+    startMorphTransition(
+      () => {
+        setCurrentMonth(month);
+        setViewMode('month');
+        resetScrollToTop();
+      },
+      () => {
+        resetScrollToTop();
+      }
+    );
   };
 
   const handleBackToYear = () => {
     setActiveTransitionMonth(currentMonth);
     updateBrowserUrl('year', currentYear, currentMonth, false);
-    startMorphTransition(() => {
-      setViewMode('year');
-    });
+    startMorphTransition(
+      () => {
+        setViewMode('year');
+      },
+      () => {
+        scrollToMonthCardInstant(currentMonth);
+      }
+    );
   };
 
   const handleSelectYear = (newYear: number) => {

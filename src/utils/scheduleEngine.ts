@@ -244,7 +244,8 @@ export function getMonthDays(
     const isPast = dateStr < todayStr;
     const isToday = dateStr === todayStr;
 
-    const isDoublePay = holidayInfo.isDoublePayEligible && (status === 'work' || status === 'overtime');
+    // Подработка в выходной день или смена в официальный праздник РФ оплачиваются в двойном размере (ст. 153 ТК РФ)
+    const isDoublePay = status === 'overtime' || (holidayInfo.isDoublePayEligible && status === 'work');
     const colleagueVacations = colleagues ? getColleagueVacationsForDate(dateStr, colleagues) : undefined;
 
     days.push({

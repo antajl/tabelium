@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,6 +10,10 @@ import {
   Download,
   Eye,
   Sparkles,
+  Palmtree,
+  Calendar,
+  ArrowDown,
+  ArrowUp,
 } from 'lucide-react';
 import type {
   Colleague,
@@ -70,6 +74,53 @@ export const YearView: React.FC<YearViewProps> = ({
     day: DayShiftInfo;
     rect: DOMRect;
   } | null>(null);
+
+  const now = useMemo(() => new Date(), []);
+  const currentRealYear = now.getFullYear();
+  const currentRealMonth = now.getMonth() + 1;
+  const isCurrentYear = year === currentRealYear;
+  const currentRealMonthName = RUSSIAN_MONTH_NAMES[currentRealMonth - 1];
+
+  const [highlightedMonth, setHighlightedMonth] = useState<number | null>(null);
+  const hasAutoScrolledRef = useRef(false);
+
+  const scrollToMonth = (m: number, smooth = true) => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
+      setHighlightedMonth(m);
+      setTimeout(() => {
+        setHighlightedMonth((prev) => (prev === m ? null : prev));
+      }, 1800);
+      return;
+    }
+    const el = document.getElementById(`month-card-${m}`);
+    if (el) {
+      const yOffset = -16;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      const targetTop = Math.max(0, y);
+      window.scrollTo({ top: targetTop, behavior: smooth ? 'smooth' : 'auto' });
+      if (document.documentElement) document.documentElement.scrollTop = targetTop;
+      if (document.body) document.body.scrollTop = targetTop;
+
+      setHighlightedMonth(m);
+      setTimeout(() => {
+        setHighlightedMonth((prev) => (prev === m ? null : prev));
+      }, 1800);
+    }
+  };
+
+  // Auto-scroll to target month on mobile/tablet when entering YearView
+  useEffect(() => {
+    const targetMonth = activeTransitionMonth ?? (isCurrentYear ? currentRealMonth : 1);
+    if (!hasAutoScrolledRef.current) {
+      hasAutoScrolledRef.current = true;
+      const timer = setTimeout(() => {
+        if (window.innerWidth < 1280) {
+          scrollToMonth(targetMonth, false);
+        }
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTransitionMonth, isCurrentYear, currentRealMonth]);
 
   const handleMonthClick = (m: number) => {
     if (expandingMonth !== null) return;
@@ -170,12 +221,30 @@ export const YearView: React.FC<YearViewProps> = ({
             </div>
 
             <button
-              onClick={onJumpToday}
+              onClick={() => {
+                if (!isCurrentYear) {
+                  hasAutoScrolledRef.current = false;
+                  onJumpToday();
+                } else {
+                  scrollToMonth(currentRealMonth, true);
+                }
+              }}
               className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-xs font-medium text-[#736b60] hover:text-[#252320] transition shadow-2xs active:scale-95 cursor-pointer"
-              title="Перейти к текущему году"
+              title={
+                isCurrentYear
+                  ? `Перейти к текущему месяцу (${currentRealMonthName})`
+                  : 'Перейти к текущему году'
+              }
             >
               <RotateCcw className="w-3 h-3 text-[#b68231]" strokeWidth={1.75} />
-              <span className="hidden sm:inline">Текущий год</span>
+              {isCurrentYear ? (
+                <span className="font-semibold text-[#b68231]">
+                  <span className="hidden sm:inline">Текущий: </span>
+                  {currentRealMonthName}
+                </span>
+              ) : (
+                <span className="hidden sm:inline">Текущий год</span>
+              )}
             </button>
 
             {isReadOnly && (
@@ -307,26 +376,34 @@ export const YearView: React.FC<YearViewProps> = ({
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#d32f2f] shrink-0" />
             <span className="text-[#81796e]">Работа:</span>
-            <strong className="text-[#252320] font-bold tabular-nums">{yearStats.workDaysCount} смен</strong>
+            <strong className="text-[#252320] font-bold tabular-nums">
+              {yearStats.workDaysCount} {pluralize(yearStats.workDaysCount, 'смена', 'смены', 'смен')}
+            </strong>
           </div>
 
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#2e7d32] shrink-0" />
             <span className="text-[#81796e]">Выходные:</span>
-            <strong className="text-[#252320] font-bold tabular-nums">{yearStats.offDaysCount} дн.</strong>
+            <strong className="text-[#252320] font-bold tabular-nums">
+              {yearStats.offDaysCount} {pluralize(yearStats.offDaysCount, 'день', 'дня', 'дней')}
+            </strong>
           </div>
 
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#e5a100] shrink-0" />
             <span className="text-[#81796e]">Мой отпуск:</span>
-            <strong className="text-[#252320] font-bold tabular-nums">{yearStats.vacationDaysCount} дн.</strong>
+            <strong className="text-[#252320] font-bold tabular-nums">
+              {yearStats.vacationDaysCount} {pluralize(yearStats.vacationDaysCount, 'день', 'дня', 'дней')}
+            </strong>
           </div>
 
           {yearStats.overtimeDaysCount > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#b71c1c] ring-1 ring-[#e57373] shrink-0" />
               <span className="text-[#81796e]">Подработка:</span>
-              <strong className="text-[#252320] font-bold tabular-nums">{yearStats.overtimeDaysCount} смен</strong>
+              <strong className="text-[#252320] font-bold tabular-nums">
+                {yearStats.overtimeDaysCount} {pluralize(yearStats.overtimeDaysCount, 'смена', 'смены', 'смен')}
+              </strong>
             </div>
           )}
 
@@ -334,15 +411,44 @@ export const YearView: React.FC<YearViewProps> = ({
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#9d4c37] shrink-0" />
               <span className="text-[#81796e]">Оплата 2X:</span>
-              <strong className="text-[#252320] font-bold tabular-nums">{yearStats.doublePayShiftsCount} смен</strong>
+              <strong className="text-[#252320] font-bold tabular-nums">
+                {yearStats.doublePayShiftsCount} {pluralize(yearStats.doublePayShiftsCount, 'смена', 'смены', 'смен')}
+              </strong>
             </div>
           )}
+        </div>
+        {/* Mobile Quick Month Strip (xl:hidden) - 1-tap jump to any month */}
+        <div className="xl:hidden flex items-center gap-1.5 pt-2 border-t border-[#f2ede4] text-xs">
+          <span className="text-[11px] font-semibold text-[#81796e] shrink-0 hidden sm:inline">
+            Месяцы:
+          </span>
+          <div className="inline-flex items-center h-7.5 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs text-xs overflow-x-auto overflow-y-hidden w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-0.5">
+            {monthsData.map((mData) => {
+              const isCurrent = isCurrentYear && mData.month === currentRealMonth;
+              return (
+                <button
+                  key={mData.month}
+                  onClick={() => scrollToMonth(mData.month, true)}
+                  onDoubleClick={() => handleMonthClick(mData.month)}
+                  title={`${mData.monthName} — кликните для перехода, двойной клик для открытия`}
+                  className={`h-full px-2 sm:px-2.5 rounded-md font-medium text-[11px] sm:text-xs transition cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                    isCurrent
+                      ? 'bg-white text-[#b68231] font-bold shadow-xs border border-[#b68231]/40 ring-1 ring-[#b68231]/30'
+                      : 'text-[#81796e] hover:text-[#252320] hover:bg-white/60'
+                  }`}
+                >
+                  {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-[#b68231] shrink-0" />}
+                  <span>{mData.monthName.slice(0, 3)}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* 12 Months Grid: Responsive based on layoutMode */}
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 xl:gap-2 p-0.5 sm:p-1 ${
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 xl:gap-2 ${
           isFitScreen
             ? 'xl:flex-1 xl:min-h-0 xl:grid-rows-3'
             : is6x2
@@ -360,6 +466,7 @@ export const YearView: React.FC<YearViewProps> = ({
           return (
             <div
               key={mData.month}
+              id={`month-card-${mData.month}`}
               style={{
                 viewTransitionName: isTransitionTarget ? 'active-calendar-surface' : undefined,
               } as React.CSSProperties}
@@ -368,11 +475,13 @@ export const YearView: React.FC<YearViewProps> = ({
                 if ((e.target as HTMLElement).closest('button[data-day]')) return;
                 handleMonthClick(mData.month);
               }}
-              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer overflow-hidden p-2 sm:p-2.5 xl:p-1.5 ${
+              className={`rounded-xl flex flex-col justify-between transition-all duration-300 cursor-pointer overflow-hidden p-2 sm:p-2.5 xl:p-1.5 scroll-mt-3 sm:scroll-mt-4 ${
                 isFitScreen ? 'xl:h-full xl:min-h-0' : ''
               } ${
                 isExpanding
                   ? 'bg-white scale-[1.04] shadow-2xl ring-4 ring-[#b68231] border-[#b68231] z-30 opacity-90'
+                  : highlightedMonth === mData.month
+                  ? 'bg-white ring-4 ring-[#b68231] outline outline-2 outline-[#b68231] outline-offset-1 border-[#b68231] shadow-2xl scale-[1.01] z-20'
                   : isCurrentMonth
                   ? 'bg-white ring-2 ring-[#b68231] outline outline-1 outline-[#b68231] outline-offset-1 border-[#b68231] shadow-[0_4px_14px_rgba(182,130,49,0.12)] hover:shadow-lg hover:scale-[1.01] z-10'
                   : 'bg-white border border-[#e7ddcf] shadow-[0_2px_8px_rgba(45,30,15,0.03)] hover:shadow-lg hover:border-[#d8b57a] hover:scale-[1.01]'
@@ -397,22 +506,42 @@ export const YearView: React.FC<YearViewProps> = ({
                   <span>{mData.monthName}</span>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-xs">
-                  <span
-                    className="text-[10px] sm:text-[11px] font-semibold text-[#81796e] tabular-nums"
-                    title={`Всего смен: ${mData.stats.workDaysCount + mData.stats.overtimeDaysCount} (основных: ${mData.stats.workDaysCount}, подработок: ${mData.stats.overtimeDaysCount})`}
-                  >
-                    {mData.stats.workDaysCount + mData.stats.overtimeDaysCount} см.
-                  </span>
-                  {mData.stats.doublePayShiftsCount > 0 && (
-                    <span
-                      title={`${mData.stats.doublePayShiftsCount} смен с 2X оплатой`}
-                      className="text-[9px] sm:text-[10px] font-bold text-[#9d4c37] tabular-nums"
-                    >
-                      2X: {mData.stats.doublePayShiftsCount}
-                    </span>
-                  )}
-                </div>
+                {(() => {
+                  const totalShifts = mData.stats.workDaysCount + mData.stats.overtimeDaysCount;
+                  const doubleShifts = mData.stats.doublePayShiftsCount;
+                  const holidayDoubleCount = mData.days.filter((d) => d.status === 'work' && d.isDoublePay).length;
+                  const overtimeCount = mData.stats.overtimeDaysCount;
+                  const breakdownText =
+                    overtimeCount > 0 && holidayDoubleCount > 0
+                      ? `: ${overtimeCount} ${pluralize(overtimeCount, 'подработка', 'подработки', 'подработок')}, ${holidayDoubleCount} в праздники`
+                      : overtimeCount > 0
+                      ? `: ${overtimeCount} ${pluralize(overtimeCount, 'подработка', 'подработки', 'подработок')}`
+                      : holidayDoubleCount > 0
+                      ? `: ${holidayDoubleCount} в праздники`
+                      : '';
+
+                  return (
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold">
+                      <span
+                        className="text-[#81796e] tabular-nums"
+                        title={`Всего смен: ${totalShifts} (основных: ${mData.stats.workDaysCount}, подработок: ${mData.stats.overtimeDaysCount})`}
+                      >
+                        {totalShifts} {pluralize(totalShifts, 'смена', 'смены', 'смен')}
+                      </span>
+                      {doubleShifts > 0 && (
+                        <>
+                          <span className="text-[#d5cbbe] font-normal select-none">·</span>
+                          <span
+                            title={`${doubleShifts} ${pluralize(doubleShifts, 'смена', 'смены', 'смен')} с двойной оплатой (2X) по ст. 153 ТК РФ${breakdownText}`}
+                            className="text-[#9d4c37] tabular-nums"
+                          >
+                            {doubleShifts} {pluralize(doubleShifts, 'двойная', 'двойные', 'двойных')}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Day of Week Row */}
@@ -589,7 +718,7 @@ export const YearView: React.FC<YearViewProps> = ({
                     key={cv.colleagueId + cv.vacationId}
                     className="flex items-center gap-1.5 text-cyan-200"
                   >
-                    <span>🏖️</span>
+                    <Palmtree className="w-3 h-3 text-cyan-300 shrink-0" strokeWidth={1.75} />
                     <span>
                       {cv.colleagueName}: отпуск (день {cv.dayIndex} из{' '}
                       {cv.totalDays})
@@ -603,6 +732,23 @@ export const YearView: React.FC<YearViewProps> = ({
             Кликните для подробностей или редактирования
           </div>
         </div>
+      )}
+
+      {/* Floating Quick Jump Button on Mobile (xl:hidden) when current month is off-screen */}
+      {isCurrentYear && !currentMonthInView && scrollDirectionToCurrent && (
+        <button
+          onClick={() => scrollToMonth(currentRealMonth, true)}
+          className="xl:hidden fixed bottom-4 right-4 z-40 h-9 px-3.5 rounded-full bg-[#252320] text-[#faf8f4] border border-[#d8b57a] shadow-[0_4px_16px_rgba(37,35,32,0.25)] flex items-center gap-2 text-xs font-semibold hover:bg-[#322e2a] transition-all duration-300 active:scale-95 cursor-pointer backdrop-blur-sm"
+          title={`Перейти к карточке текущего месяца (${currentRealMonthName})`}
+        >
+          <Calendar className="w-3.5 h-3.5 text-[#d8b57a]" strokeWidth={1.75} />
+          <span>{currentRealMonthName}</span>
+          {scrollDirectionToCurrent === 'down' ? (
+            <ArrowDown className="w-3.5 h-3.5 text-[#d8b57a] animate-bounce" strokeWidth={2} />
+          ) : (
+            <ArrowUp className="w-3.5 h-3.5 text-[#d8b57a] animate-bounce" strokeWidth={2} />
+          )}
+        </button>
       )}
     </div>
   );

@@ -61,6 +61,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const firstDayOfWeek = days.length > 0 ? days[0].dayOfWeek : 1;
   const blankDaysCount = firstDayOfWeek - 1;
 
+  const isCurrentMonth = React.useMemo(() => {
+    const now = new Date();
+    return year === now.getFullYear() && month === now.getMonth() + 1;
+  }, [year, month]);
+
   // Range Selection State (click-and-drag or tap)
   const [rangeAnchor, setRangeAnchor] = useState<string | null>(null);
   const [rangeTarget, setRangeTarget] = useState<string | null>(null);
@@ -273,16 +278,20 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
         {/* Right: Actions (Today Button & Action Buttons) */}
         <div className="flex items-center gap-2 ml-auto shrink-0 flex-wrap">
-          <button
-            onClick={onJumpToday}
-            className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-[#736b60] hover:text-[#252320] text-xs font-medium shadow-2xs transition active:scale-95 cursor-pointer"
-            title="Перейти к текущему дню"
-          >
-            <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
-            <span className="hidden sm:inline">Текущий месяц</span>
-          </button>
+          {!isCurrentMonth && (
+            <>
+              <button
+                onClick={onJumpToday}
+                className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-[#736b60] hover:text-[#252320] text-xs font-medium shadow-2xs transition active:scale-95 cursor-pointer"
+                title="Перейти к текущему месяцу"
+              >
+                <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
+                <span className="hidden sm:inline">Текущий месяц</span>
+              </button>
 
-          <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block" />
+              <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block" />
+            </>
+          )}
 
           {isReadOnly ? (
             <div className="flex items-center gap-1.5">

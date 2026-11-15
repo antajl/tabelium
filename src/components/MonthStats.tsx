@@ -5,7 +5,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { MonthStatistics, UserScheduleConfig } from '../types/schedule';
-import { RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
+import { pluralize, RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
 
 interface MonthStatsProps {
   stats: MonthStatistics;
@@ -54,7 +54,7 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
             <span className="text-xs font-semibold text-[#93231c]">Работа</span>
           </div>
           <span className="text-xs font-bold tabular-nums text-[#93231c]">
-            {stats.workDaysCount} <span className="text-[10px] font-normal text-[#b85a53]">см.</span>
+            {stats.workDaysCount} <span className="text-[10px] font-normal text-[#b85a53]">{pluralize(stats.workDaysCount, 'смена', 'смены', 'смен')}</span>
           </span>
         </div>
 
@@ -65,7 +65,7 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
             <span className="text-xs font-semibold text-[#7f1d1d]">Подработка</span>
           </div>
           <span className="text-xs font-bold tabular-nums text-[#7f1d1d]">
-            {stats.overtimeDaysCount} <span className="text-[10px] font-normal text-[#9c3e37]">см.</span>
+            {stats.overtimeDaysCount} <span className="text-[10px] font-normal text-[#9c3e37]">{pluralize(stats.overtimeDaysCount, 'смена', 'смены', 'смен')}</span>
           </span>
         </div>
 
@@ -76,7 +76,7 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
             <span className="text-xs font-semibold text-[#215128]">Выходные</span>
           </div>
           <span className="text-xs font-bold tabular-nums text-[#215128]">
-            {stats.offDaysCount} <span className="text-[10px] font-normal text-[#629769]">дн.</span>
+            {stats.offDaysCount} <span className="text-[10px] font-normal text-[#629769]">{pluralize(stats.offDaysCount, 'день', 'дня', 'дней')}</span>
           </span>
         </div>
 
@@ -87,7 +87,7 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
             <span className="text-xs font-semibold text-[#7d5600]">Отпуск</span>
           </div>
           <span className="text-xs font-bold tabular-nums text-[#7d5600]">
-            {stats.vacationDaysCount} <span className="text-[10px] font-normal text-[#a2802d]">дн.</span>
+            {stats.vacationDaysCount} <span className="text-[10px] font-normal text-[#a2802d]">{pluralize(stats.vacationDaysCount, 'день', 'дня', 'дней')}</span>
           </span>
         </div>
       </div>
@@ -122,7 +122,7 @@ export const MonthStats: React.FC<MonthStatsProps> = ({
           <div className="flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[#9d4c37]" strokeWidth={1.5} />
             <span className="font-semibold text-[11px]">
-              {stats.doublePayShiftsCount} {stats.doublePayShiftsCount === 1 ? 'смена' : 'смены'} с оплатой 2X
+              {stats.doublePayShiftsCount} {pluralize(stats.doublePayShiftsCount, 'смена', 'смены', 'смен')} с оплатой 2X
             </span>
           </div>
           <span className="text-[10px] text-[#9d4c37]/80">ст. 153 ТК РФ</span>

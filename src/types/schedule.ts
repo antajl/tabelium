@@ -84,6 +84,9 @@ export interface DayShiftInfo {
   isHoliday: boolean;
   isDoublePay: boolean;
   holidayName?: string;
+  holidayFullName?: string;
+  holidayDescription?: string;
+  holidayCategory?: 'statutory' | 'transfer';
   note?: string;
   isToday: boolean;
   isPast: boolean;
