@@ -131,7 +131,7 @@ export const YearView: React.FC<YearViewProps> = ({
     <div
       className={
         isFitScreen
-          ? 'h-full min-h-[640px] flex flex-col justify-between gap-1.5 sm:gap-2'
+          ? 'flex flex-col gap-2 xl:h-full xl:justify-between'
           : 'flex flex-col gap-3 sm:gap-3.5'
       }
     >
@@ -341,13 +341,13 @@ export const YearView: React.FC<YearViewProps> = ({
 
       {/* 12 Months Grid: Responsive based on layoutMode */}
       <div
-        className={
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 xl:gap-2 p-0.5 sm:p-1 ${
           isFitScreen
-            ? 'flex-1 min-h-[560px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-12 md:grid-rows-6 lg:grid-rows-4 xl:grid-rows-3 gap-2 p-0.5 sm:p-1'
+            ? 'xl:flex-1 xl:min-h-0 xl:grid-rows-3'
             : is6x2
-            ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2'
-            : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5'
-        }
+            ? 'grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2'
+            : 'gap-2 sm:gap-2.5'
+        }`}
       >
         {monthsData.map((mData) => {
           const firstDayOfWeek = mData.days.length > 0 ? mData.days[0].dayOfWeek : 1;
@@ -367,10 +367,8 @@ export const YearView: React.FC<YearViewProps> = ({
                 if ((e.target as HTMLElement).closest('button[data-day]')) return;
                 handleMonthClick(mData.month);
               }}
-              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer ${
-                isFitScreen
-                  ? 'h-full min-h-[135px] p-1.5 sm:p-2'
-                  : 'p-2 sm:p-2.5'
+              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer overflow-hidden p-2 sm:p-2.5 xl:p-1.5 ${
+                isFitScreen ? 'xl:h-full xl:min-h-0' : ''
               } ${
                 isExpanding
                   ? 'bg-white scale-[1.04] shadow-2xl ring-4 ring-[#b68231] border-[#b68231] z-30 opacity-90'
@@ -430,21 +428,21 @@ export const YearView: React.FC<YearViewProps> = ({
 
               {/* Calendar Grid for this month */}
               <div
-                className={
+                className={`grid grid-cols-7 gap-0.5 sm:gap-1 xl:gap-0.5 ${
                   isFitScreen
-                    ? 'flex-1 min-h-0 grid grid-cols-7 grid-rows-6 gap-0.5'
-                    : 'grid grid-cols-7 gap-0.5 sm:gap-1'
-                }
+                    ? 'xl:flex-1 xl:min-h-0 xl:grid-rows-6'
+                    : ''
+                }`}
               >
                 {/* Blanks */}
                 {Array.from({ length: blankDaysCount }).map((_, i) => (
                   <div
                     key={`blank-${i}`}
-                    className={
+                    className={`rounded p-0.5 ${
                       isFitScreen
-                        ? 'h-full min-h-0'
+                        ? 'aspect-[1/0.85] sm:aspect-[1/0.8] xl:aspect-auto xl:h-full xl:min-h-0'
                         : 'aspect-[1/0.8]'
-                    }
+                    }`}
                   />
                 ))}
 
@@ -480,9 +478,12 @@ export const YearView: React.FC<YearViewProps> = ({
                         setHoveredDay({ day, rect });
                       }}
                       onMouseLeave={() => setHoveredDay(null)}
+                      title={`${day.dateStr} — ${shiftDef.label}${
+                        day.holidayName ? ` (${day.holidayName})` : ''
+                      }`}
                       className={`${
                         isFitScreen
-                          ? 'h-full min-h-0 rounded p-0.5 overflow-hidden'
+                          ? 'aspect-[1/0.85] sm:aspect-[1/0.8] xl:aspect-auto xl:h-full xl:min-h-0 rounded p-0.5 overflow-hidden'
                           : 'aspect-[1/0.8] rounded p-0.5 overflow-hidden'
                       } flex flex-col items-center justify-between text-[10px] font-medium border relative transition cursor-pointer active:scale-95 ${
                         shiftDef.colorBg

@@ -438,7 +438,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                           className={`flex items-center justify-between px-1.5 py-0.5 rounded-md border text-[9px] sm:text-[10px] font-semibold leading-tight shadow-2xs truncate ${theme.cellBadgeBg} ${theme.cellBadgeBorder} ${theme.cellBadgeText}`}
                           title={`Отпуск коллеги: ${cv.colleagueName} (${cv.startDate} — ${cv.endDate}, день ${cv.dayIndex} из ${cv.totalDays})`}
                         >
-                          <span className="truncate">{cv.colleagueName}</span>
+                          <span className="truncate flex items-center gap-1">
+                            <span
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: theme.accentColor }}
+                            />
+                            <span className="truncate">{cv.colleagueName}</span>
+                          </span>
                           <span className="text-[8px] sm:text-[9px] opacity-75 shrink-0 ml-1">отпуск</span>
                         </div>
                       );

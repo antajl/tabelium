@@ -185,8 +185,11 @@ export const App: React.FC = () => {
           const newVacs = def.vacations.filter((v) => !existingVacIds.has(v.id));
           let colorTheme = existing.colorTheme || def.colorTheme;
           let role = existing.role || def.role;
-          if (existing.id === 'lekha' && existing.colorTheme === 'purple') {
-            colorTheme = 'emerald';
+          if (
+            existing.id === 'lekha' &&
+            (existing.colorTheme === 'purple' || existing.colorTheme === 'emerald')
+          ) {
+            colorTheme = 'orange';
           }
           if (existing.id === 'lekha' && existing.role === 'Коллега') {
             role = 'Напарник';

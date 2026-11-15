@@ -45,7 +45,7 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
   const [isAddingColleague, setIsAddingColleague] = useState<boolean>(false);
   const [newColleagueName, setNewColleagueName] = useState<string>('');
   const [newColleagueRole, setNewColleagueRole] = useState<string>('Напарник');
-  const [newColleagueTheme, setNewColleagueTheme] = useState<string>('emerald');
+  const [newColleagueTheme, setNewColleagueTheme] = useState<string>('orange');
 
   // Quick inline actions state for colleagues
   const [colorPickerColleagueId, setColorPickerColleagueId] = useState<string | null>(null);
