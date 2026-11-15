@@ -98,9 +98,10 @@ export interface ColleagueVacation {
 
 export interface Colleague {
   id: string;
-  name: string; // e.g. "Макс", "Лёха"
-  role?: string; // e.g. "Напарник", "Коллега"
-  color?: string; // blue shade or tag
+  name: string; // e.g. "Я", "Макс", "Лёха"
+  role?: string; // e.g. "Мой график", "Напарник", "Коллега"
+  isSelf?: boolean; // true if this represents the current user ("Я")
+  color?: string; // blue or amber
   vacations: ColleagueVacation[];
 }
 

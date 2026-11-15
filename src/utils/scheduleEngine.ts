@@ -76,6 +76,7 @@ export function getColleagueVacationsForDate(
   const occurrences: ColleagueVacationOccurrence[] = [];
 
   for (const colleague of colleagues) {
+    if (colleague.isSelf) continue; // User's own vacations are rendered in primary cells
     for (const vac of colleague.vacations) {
       if (dateStr >= vac.startDate && dateStr <= vac.endDate) {
         const dayIdx = daysBetween(vac.startDate, dateStr) + 1;
@@ -97,6 +98,43 @@ export function getColleagueVacationsForDate(
 
 export function loadInitialColleagues(): Colleague[] {
   return [
+    {
+      id: 'self',
+      name: 'Я',
+      role: 'Мой график',
+      isSelf: true,
+      color: '#e5a100',
+      vacations: [
+        {
+          id: 'self-vac-2026-1',
+          startDate: '2026-08-13',
+          daysCount: 14,
+          endDate: '2026-08-26',
+          note: 'Летний отпуск',
+        },
+        {
+          id: 'self-vac-2026-2',
+          startDate: '2026-11-05',
+          daysCount: 14,
+          endDate: '2026-11-18',
+          note: 'Осенний отпуск',
+        },
+        {
+          id: 'self-vac-2027-1',
+          startDate: '2027-05-16',
+          daysCount: 14,
+          endDate: '2027-05-29',
+          note: 'Весенний отпуск',
+        },
+        {
+          id: 'self-vac-2027-2',
+          startDate: '2027-11-08',
+          daysCount: 14,
+          endDate: '2027-11-21',
+          note: 'Осенний отпуск',
+        },
+      ],
+    },
     {
       id: 'max',
       name: 'Макс',
@@ -264,6 +302,22 @@ export function loadInitialOverrides(): Record<string, DayOverride> {
       status: info.status,
     };
   }
+
+  // Pre-fill user's planned 2027 vacations (16-29 мая and 8-21 ноября) as dynamic overrides
+  const addRange = (startStr: string, count: number, status: ShiftType, note?: string) => {
+    const [y, m, d] = startStr.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    for (let i = 0; i < count; i++) {
+      const curY = dt.getUTCFullYear();
+      const curM = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const curD = String(dt.getUTCDate()).padStart(2, '0');
+      result[`${curY}-${curM}-${curD}`] = { status, note };
+      dt.setUTCDate(dt.getUTCDate() + 1);
+    }
+  };
+
+  addRange('2027-05-16', 14, 'vacation', 'Весенний отпуск');
+  addRange('2027-11-08', 14, 'vacation', 'Осенний отпуск');
 
   return result;
 }

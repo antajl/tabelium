@@ -7,6 +7,7 @@ import type {
   UserScheduleConfig,
 } from './types/schedule';
 import {
+  addDaysToDate,
   calculateMonthStatistics,
   decodeSharePayload,
   DEFAULT_CONFIG,
@@ -61,7 +62,15 @@ export const App: React.FC = () => {
   const [colleagues, setColleagues] = useState<Colleague[]>(() => {
     try {
       const saved = localStorage.getItem(COLLEAGUES_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: Colleague[] = JSON.parse(saved);
+        if (!parsed.some((c) => c.isSelf || c.id === 'self')) {
+          const defaultList = loadInitialColleagues();
+          const selfItem = defaultList.find((c) => c.isSelf);
+          if (selfItem) return [selfItem, ...parsed];
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error(e);
     }
@@ -220,6 +229,16 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleAddUserVacationOverride = (startDate: string, daysCount: number) => {
+    const endDate = addDaysToDate(startDate, daysCount);
+    handleApplyRange(startDate, endDate, 'vacation');
+  };
+
+  const handleDeleteUserVacationOverride = (startDate: string, daysCount: number) => {
+    const endDate = addDaysToDate(startDate, daysCount);
+    handleResetRange(startDate, endDate);
+  };
+
   const handleRestoreGoogleSheet = () => {
     const initial = loadInitialOverrides();
     setOverrides(initial);
@@ -291,6 +310,8 @@ export const App: React.FC = () => {
                 setCurrentYear(y);
                 setCurrentMonth(m);
               }}
+              onAddUserVacationOverride={handleAddUserVacationOverride}
+              onDeleteUserVacationOverride={handleDeleteUserVacationOverride}
             />
 
             <div className="text-center text-[11px] text-[#81796e]/70 py-1">
