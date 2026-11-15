@@ -19,7 +19,6 @@ import {
   loadInitialColleagues,
   loadInitialOverrides,
 } from './utils/scheduleEngine';
-import { Navbar } from './components/Navbar';
 import { CalendarGrid } from './components/CalendarGrid';
 import { MonthStats } from './components/MonthStats';
 import { ColleaguesVacationsCard } from './components/ColleaguesVacationsCard';
@@ -151,19 +150,7 @@ export const App: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<number>(initialRoute.month);
   const [viewMode, setViewMode] = useState<'month' | 'year'>(initialRoute.view);
   const [activeTransitionMonth, setActiveTransitionMonth] = useState<number>(initialRoute.month);
-  const [yearLayout, setYearLayout] = useState<YearLayoutMode>(() => {
-    try {
-      localStorage.setItem('smenograf_year_layout', 'fit-screen');
-    } catch {}
-    return 'fit-screen';
-  });
-
-  const handleYearLayoutChange = (mode: YearLayoutMode) => {
-    setYearLayout(mode);
-    try {
-      localStorage.setItem('smenograf_year_layout', mode);
-    } catch {}
-  };
+  const [yearLayout] = useState<YearLayoutMode>('fit-screen');
 
   const [config, setConfig] = useState<UserScheduleConfig>(() => {
     try {
@@ -313,18 +300,6 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleGoHome = () => {
-    if (viewMode === 'year') {
-      const now = new Date();
-      const thisYear = now.getFullYear();
-      if (currentYear !== thisYear) {
-        handleSelectYear(thisYear);
-      }
-      return;
-    }
-    handleBackToYear();
-  };
-
   const handleSelectYear = (newYear: number) => {
     setCurrentYear(newYear);
     updateBrowserUrl(viewMode, newYear, currentMonth, false);
@@ -471,25 +446,16 @@ export const App: React.FC = () => {
   const shareUrl = generateShareUrl(config, overrides, currentYear, currentMonth);
 
   return (
-    <div className="min-h-screen bg-[#faf8f4] text-[#252320] flex flex-col font-sans antialiased">
-      <Navbar
-        scheduleName={config.scheduleName}
-        isReadOnly={isReadOnly}
-        viewMode={viewMode}
-        yearLayout={yearLayout}
-        onChangeYearLayout={handleYearLayoutChange}
-        onGoHome={handleGoHome}
-        onOpenShare={() => setIsShareModalOpen(true)}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
-        onExportImport={() => setIsExportImportOpen(true)}
-        onExitReadOnly={handleExitReadOnly}
-      />
-
+    <div
+      className={`bg-[#faf8f4] text-[#252320] flex flex-col font-sans antialiased ${
+        viewMode === 'year' ? 'h-screen overflow-hidden' : 'min-h-screen'
+      }`}
+    >
       <main
-        className={`flex-1 max-w-[1700px] w-full mx-auto px-3 sm:px-6 lg:px-8 ${
+        className={`flex-1 max-w-[1700px] w-full mx-auto px-2 sm:px-4 lg:px-6 ${
           viewMode === 'year'
-            ? 'py-2 h-[calc(100vh-53px)] overflow-hidden flex flex-col'
-            : 'py-3'
+            ? 'p-2 sm:p-2.5 h-full overflow-hidden flex flex-col'
+            : 'p-3 sm:py-4'
         }`}
       >
         {viewMode === 'month' ? (
@@ -510,6 +476,10 @@ export const App: React.FC = () => {
                 onBackToYear={handleBackToYear}
                 onApplyRange={handleApplyRange}
                 onResetRange={handleResetRange}
+                onOpenShare={() => setIsShareModalOpen(true)}
+                onOpenSettings={() => setIsSettingsModalOpen(true)}
+                onExportImport={() => setIsExportImportOpen(true)}
+                onExitReadOnly={handleExitReadOnly}
               />
             </div>
 
@@ -542,19 +512,23 @@ export const App: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 h-full overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 h-full flex flex-col">
             <YearView
               year={currentYear}
               config={config}
               overrides={overrides}
               colleagues={colleagues}
               isReadOnly={isReadOnly}
-              layoutMode="fit-screen"
+              layoutMode={yearLayout}
               activeTransitionMonth={activeTransitionMonth}
               onSelectYear={handleSelectYear}
               onJumpToday={handleJumpToday}
               onOpenMonth={handleOpenMonthFromYear}
               onSelectDay={(day, rect) => setSelectedDayInfo({ day, rect })}
+              onOpenShare={() => setIsShareModalOpen(true)}
+              onOpenSettings={() => setIsSettingsModalOpen(true)}
+              onExportImport={() => setIsExportImportOpen(true)}
+              onExitReadOnly={handleExitReadOnly}
             />
           </div>
         )}

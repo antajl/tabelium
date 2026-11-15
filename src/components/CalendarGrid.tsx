@@ -7,6 +7,10 @@ import {
   X,
   FileText,
   ArrowLeft,
+  Share2,
+  Settings,
+  Download,
+  Eye,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
@@ -28,6 +32,10 @@ interface CalendarGridProps {
   onBackToYear?: () => void;
   onApplyRange?: (startStr: string, endStr: string, status: ShiftType) => void;
   onResetRange?: (startStr: string, endStr: string) => void;
+  onOpenShare?: () => void;
+  onOpenSettings?: () => void;
+  onExportImport?: () => void;
+  onExitReadOnly?: () => void;
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -44,6 +52,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   onBackToYear,
   onApplyRange,
   onResetRange,
+  onOpenShare,
+  onOpenSettings,
+  onExportImport,
+  onExitReadOnly,
 }) => {
   const firstDayOfWeek = days.length > 0 ? days[0].dayOfWeek : 1;
   const blankDaysCount = firstDayOfWeek - 1;
@@ -146,7 +158,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       className="bg-[#fcfaf7] rounded-2xl border border-[#e7ddcf] p-3 sm:p-5 shadow-[0_1px_3px_rgba(45,30,15,0.04)]"
     >
       {/* Single Horizontal Toolbar Line */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf]">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 mb-3 border-b border-[#e7ddcf] relative z-20">
         {/* Left: Back to Year, Navigation, Dropdown, Divider, Inline Legend */}
         <div className="flex items-center gap-2 flex-wrap">
           {onBackToYear && (
@@ -212,16 +224,69 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           </div>
         </div>
 
-        {/* Right: Actions (Today Button, exact h-8 height) */}
-        <div className="flex items-center gap-2 ml-auto">
+        {/* Right: Actions (Today Button & Action Buttons) */}
+        <div className="flex items-center gap-2 ml-auto shrink-0 flex-wrap">
           <button
             onClick={onJumpToday}
             className="h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg border border-[#e7ddcf] bg-[#fbf9f5] hover:bg-[#f3ece2] text-[#736b60] hover:text-[#252320] text-xs font-medium shadow-2xs transition active:scale-95 cursor-pointer"
             title="Перейти к текущему дню"
           >
             <CalendarIcon className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
-            <span>Текущий месяц</span>
+            <span className="hidden sm:inline">Текущий месяц</span>
           </button>
+
+          <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block" />
+
+          {isReadOnly ? (
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a]">
+                <Eye className="w-3 h-3" strokeWidth={1.5} />
+                <span className="hidden sm:inline">Просмотр</span>
+              </span>
+              {onExitReadOnly && (
+                <button
+                  onClick={onExitReadOnly}
+                  className="h-8 inline-flex items-center gap-1.5 px-3 rounded-lg bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#2a1c0a] text-xs font-semibold border border-[#d8b57a] transition shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
+                  <span>Мой график</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 shrink-0">
+              {onOpenShare && (
+                <button
+                  onClick={onOpenShare}
+                  title="Поделиться графиком"
+                  className="h-8 inline-flex items-center gap-1.5 px-2.5 sm:px-3 rounded-lg border border-[#d8b57a] bg-[#fbf5eb] hover:bg-[#f3e7d5] text-[#2a1c0a] text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
+                  <span className="hidden sm:inline">Поделиться</span>
+                </button>
+              )}
+
+              {onExportImport && (
+                <button
+                  onClick={onExportImport}
+                  title="Экспорт и импорт данных"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+              )}
+
+              {onOpenSettings && (
+                <button
+                  onClick={onOpenSettings}
+                  title="Настройки графика и ставок"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <Settings className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -5,6 +5,10 @@ import {
   RotateCcw,
   Coins,
   Clock,
+  Share2,
+  Settings,
+  Download,
+  Eye,
 } from 'lucide-react';
 import type {
   Colleague,
@@ -21,6 +25,7 @@ import {
   RUSSIAN_MONTH_NAMES,
 } from '../utils/scheduleEngine';
 import { getColleagueTheme } from '../utils/colleagueThemes';
+import { YearDropdown } from './YearDropdown';
 
 interface YearViewProps {
   year: number;
@@ -34,6 +39,10 @@ interface YearViewProps {
   onJumpToday: () => void;
   onOpenMonth: (month: number) => void;
   onSelectDay: (day: DayShiftInfo, anchorRect: DOMRect) => void;
+  onOpenShare?: () => void;
+  onOpenSettings?: () => void;
+  onExportImport?: () => void;
+  onExitReadOnly?: () => void;
 }
 
 export const YearView: React.FC<YearViewProps> = ({
@@ -41,13 +50,17 @@ export const YearView: React.FC<YearViewProps> = ({
   config,
   overrides,
   colleagues,
-  isReadOnly: _isReadOnly,
+  isReadOnly,
   layoutMode = 'fit-screen',
   activeTransitionMonth,
   onSelectYear,
   onJumpToday,
   onOpenMonth,
   onSelectDay,
+  onOpenShare,
+  onOpenSettings,
+  onExportImport,
+  onExitReadOnly,
 }) => {
   const [selectedColleagueFilter, setSelectedColleagueFilter] = useState<string | null>(null);
   const [expandingMonth, setExpandingMonth] = useState<number | null>(null);
@@ -117,19 +130,19 @@ export const YearView: React.FC<YearViewProps> = ({
     <div
       className={
         isFitScreen
-          ? 'h-full flex flex-col justify-between gap-2 overflow-hidden'
+          ? 'h-full flex flex-col justify-between gap-1.5 sm:gap-2'
           : 'flex flex-col gap-3 sm:gap-3.5'
       }
     >
       {/* Unified Year Control & Statistics Card */}
       <div
         style={{ viewTransitionName: 'active-stats-surface' } as React.CSSProperties}
-        className="bg-white rounded-xl border border-[#e7ddcf] p-2 sm:p-2.5 gap-2 shadow-[0_2px_8px_rgba(45,30,15,0.03)] flex flex-col shrink-0"
+        className="bg-white rounded-xl border border-[#e7ddcf] p-2 sm:p-2.5 gap-2 shadow-[0_2px_8px_rgba(45,30,15,0.03)] flex flex-col shrink-0 relative z-30"
       >
-        {/* Top Control Line: Year Switcher, Colleague Vacation Filters, Hours Worked */}
+        {/* Top Control Line: Year Switcher, Colleague Vacation Filters, Stats & Action Buttons */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-3">
-          {/* Left: Year Switcher (Unified segmented control, exact h-8 height) */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Left: Year Switcher & Status (Unified segmented control, exact h-8 height) */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
             <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs">
               <button
                 onClick={() => onSelectYear(year - 1)}
@@ -139,20 +152,11 @@ export const YearView: React.FC<YearViewProps> = ({
                 <ChevronLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
               </button>
 
-              <div className="relative">
-                <select
-                  value={year}
-                  onChange={(e) => onSelectYear(Number(e.target.value))}
-                  className="appearance-none h-7 px-2.5 pr-5.5 font-bold text-sm text-[#252320] bg-transparent hover:bg-white rounded cursor-pointer transition focus:outline-none focus:ring-1 focus:ring-[#b68231]"
-                >
-                  {yearsRange.map((y) => (
-                    <option key={y} value={y}>
-                      {y} год
-                    </option>
-                  ))}
-                </select>
-                <ChevronRight className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rotate-90 text-[#81796e]" strokeWidth={1.75} />
-              </div>
+              <YearDropdown
+                selectedYear={year}
+                yearsRange={yearsRange}
+                onSelectYear={onSelectYear}
+              />
 
               <button
                 onClick={() => onSelectYear(year + 1)}
@@ -171,6 +175,13 @@ export const YearView: React.FC<YearViewProps> = ({
               <RotateCcw className="w-3 h-3 text-[#b68231]" strokeWidth={1.75} />
               <span className="hidden sm:inline">Текущий год</span>
             </button>
+
+            {isReadOnly && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#f3e7d5] text-[#7b511c] border border-[#d8b57a]">
+                <Eye className="w-3 h-3" strokeWidth={1.5} />
+                <span className="hidden sm:inline">Просмотр</span>
+              </span>
+            )}
           </div>
 
           {/* Middle: Colleague Vacation Filter (Unified segmented group, no floating pills) */}
@@ -179,10 +190,10 @@ export const YearView: React.FC<YearViewProps> = ({
               Отпуска:
             </span>
 
-            <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs text-xs overflow-x-auto max-w-full">
+            <div className="inline-flex items-center h-8 bg-[#fbf9f5] border border-[#e7ddcf] rounded-lg p-0.5 shadow-2xs text-xs overflow-x-auto overflow-y-hidden max-w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <button
                 onClick={() => setSelectedColleagueFilter(null)}
-                className={`h-7 px-2.5 rounded-md font-medium transition cursor-pointer shrink-0 ${
+                className={`h-full px-2.5 rounded-md font-medium transition cursor-pointer shrink-0 ${
                   selectedColleagueFilter === null
                     ? 'bg-white text-[#252320] shadow-xs font-semibold'
                     : 'text-[#81796e] hover:text-[#252320]'
@@ -202,7 +213,7 @@ export const YearView: React.FC<YearViewProps> = ({
                       setSelectedColleagueFilter(isSelected ? null : c.id)
                     }
                     title={`Подсветить отпуска: ${c.name} (${daysCount} дн. в ${year} г.)`}
-                    className={`h-7 px-2.5 rounded-md font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    className={`h-full px-2.5 rounded-md font-medium transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
                       isSelected
                         ? 'bg-white text-[#252320] shadow-xs font-semibold ring-1 ring-[#b68231]'
                         : 'text-[#81796e] hover:text-[#252320]'
@@ -222,13 +233,13 @@ export const YearView: React.FC<YearViewProps> = ({
             </div>
           </div>
 
-          {/* Right: Hours & Earnings (Clean text without heavy badges) */}
-          <div className="flex items-center gap-3 text-xs text-[#81796e] shrink-0">
+          {/* Right: Hours & Actions (Unified h-8 controls) */}
+          <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-[#81796e] shrink-0 justify-between lg:justify-end">
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
               <span>
                 Отработано: <strong className="text-[#252320] font-bold tabular-nums">{yearStats.estimatedHours} ч.</strong>
-                <span className="text-[11px] opacity-70 ml-1">
+                <span className="text-[11px] opacity-70 ml-1 hidden sm:inline">
                   (ночных {yearStats.estimatedNightHours} ч.)
                 </span>
               </span>
@@ -238,6 +249,52 @@ export const YearView: React.FC<YearViewProps> = ({
               <div className="flex items-center gap-1 font-bold text-[#7b511c]">
                 <Coins className="w-3.5 h-3.5 text-[#b68231]" strokeWidth={1.5} />
                 <span>{yearStats.estimatedPay.toLocaleString('ru-RU')} ₽</span>
+              </div>
+            )}
+
+            <div className="h-4 w-px bg-[#e7ddcf] hidden sm:block" />
+
+            {/* Functional actions */}
+            {isReadOnly ? (
+              <button
+                onClick={onExitReadOnly}
+                className="h-8 inline-flex items-center gap-1.5 px-3 rounded-lg bg-[#f3e7d5] hover:bg-[#e7d1ab] text-[#2a1c0a] text-xs font-semibold border border-[#d8b57a] transition shadow-xs active:scale-95 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
+                <span>Мой график</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 shrink-0">
+                {onOpenShare && (
+                  <button
+                    onClick={onOpenShare}
+                    title="Поделиться графиком"
+                    className="h-8 inline-flex items-center gap-1.5 px-2.5 sm:px-3 rounded-lg border border-[#d8b57a] bg-[#fbf5eb] hover:bg-[#f3e7d5] text-[#2a1c0a] text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
+                  >
+                    <Share2 className="w-3.5 h-3.5 text-[#7b511c]" strokeWidth={1.5} />
+                    <span className="hidden sm:inline">Поделиться</span>
+                  </button>
+                )}
+
+                {onExportImport && (
+                  <button
+                    onClick={onExportImport}
+                    title="Экспорт и импорт данных"
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-xs active:scale-95 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                )}
+
+                {onOpenSettings && (
+                  <button
+                    onClick={onOpenSettings}
+                    title="Настройки графика и ставок"
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-[#fcfaf7] hover:bg-[#f7f2ea] text-[#81796e] hover:text-[#252320] border border-[#e7ddcf] transition shadow-xs active:scale-95 cursor-pointer"
+                  >
+                    <Settings className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -285,7 +342,7 @@ export const YearView: React.FC<YearViewProps> = ({
       <div
         className={
           isFitScreen
-            ? 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-12 md:grid-rows-6 lg:grid-rows-4 xl:grid-rows-3 gap-2 overflow-hidden'
+            ? 'flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-12 md:grid-rows-6 lg:grid-rows-4 xl:grid-rows-3 gap-2 p-0.5 sm:p-1'
             : is6x2
             ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2'
             : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-2.5'
@@ -310,7 +367,7 @@ export const YearView: React.FC<YearViewProps> = ({
               }}
               className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer ${
                 isFitScreen
-                  ? 'h-full min-h-0 p-1.5 sm:p-2 overflow-hidden'
+                  ? 'h-full min-h-0 p-1.5 sm:p-2'
                   : 'p-2 sm:p-2.5'
               } ${
                 isExpanding
