@@ -101,7 +101,7 @@ export interface Colleague {
   name: string; // e.g. "Я", "Макс", "Лёха"
   role?: string; // e.g. "Мой график", "Напарник", "Коллега"
   isSelf?: boolean; // true if this represents the current user ("Я")
-  color?: string; // blue or amber
+  colorTheme?: string; // 'blue' | 'purple' | 'teal' | 'rose' | 'amber'
   vacations: ColleagueVacation[];
 }
 
@@ -113,6 +113,7 @@ export interface ColleagueVacationOccurrence {
   endDate: string;
   dayIndex: number; // 1-based index (e.g. day 1 of 7)
   totalDays: number;
+  colorTheme?: string;
 }
 
 export interface MonthStatistics {

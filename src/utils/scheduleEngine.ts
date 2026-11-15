@@ -88,6 +88,7 @@ export function getColleagueVacationsForDate(
           endDate: vac.endDate,
           dayIndex: dayIdx,
           totalDays: vac.daysCount,
+          colorTheme: colleague.colorTheme || (colleague.id === 'lekha' ? 'purple' : 'blue'),
         });
       }
     }
@@ -103,7 +104,7 @@ export function loadInitialColleagues(): Colleague[] {
       name: 'Я',
       role: 'Мой график',
       isSelf: true,
-      color: '#e5a100',
+      colorTheme: 'amber',
       vacations: [
         {
           id: 'self-vac-2026-1',
@@ -139,7 +140,7 @@ export function loadInitialColleagues(): Colleague[] {
       id: 'max',
       name: 'Макс',
       role: 'Напарник',
-      color: '#2563eb',
+      colorTheme: 'blue',
       vacations: [
         {
           id: 'max-vac-1',
@@ -168,7 +169,7 @@ export function loadInitialColleagues(): Colleague[] {
       id: 'lekha',
       name: 'Лёха',
       role: 'Коллега',
-      color: '#3b82f6',
+      colorTheme: 'purple',
       vacations: [
         {
           id: 'lekha-vac-1',

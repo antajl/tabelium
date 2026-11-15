@@ -10,6 +10,7 @@ import {
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
 import { RUSSIAN_DAY_OF_WEEK_SHORT } from '../utils/scheduleEngine';
+import { getColleagueTheme } from '../utils/colleagueThemes';
 import { MonthYearDropdown } from './MonthYearDropdown';
 
 interface CalendarGridProps {
@@ -308,16 +309,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                 {day.colleagueVacations && day.colleagueVacations.length > 0 && (
                   <div className="flex flex-col gap-0.5 w-full">
-                    {day.colleagueVacations.map((cv) => (
-                      <div
-                        key={cv.colleagueId + cv.vacationId}
-                        className="flex items-center justify-between px-1.5 py-0.5 rounded-md bg-[#eff6ff] border border-[#bfdbfe] text-[#1e40af] text-[9px] sm:text-[10px] font-semibold leading-tight shadow-2xs truncate"
-                        title={`Отпуск коллеги: ${cv.colleagueName} (${cv.startDate} — ${cv.endDate}, день ${cv.dayIndex} из ${cv.totalDays})`}
-                      >
-                        <span className="truncate">{cv.colleagueName}</span>
-                        <span className="text-[8px] sm:text-[9px] opacity-75 shrink-0 ml-1">отпуск</span>
-                      </div>
-                    ))}
+                    {day.colleagueVacations.map((cv) => {
+                      const theme = getColleagueTheme(cv.colorTheme);
+                      return (
+                        <div
+                          key={cv.colleagueId + cv.vacationId}
+                          className={`flex items-center justify-between px-1.5 py-0.5 rounded-md border text-[9px] sm:text-[10px] font-semibold leading-tight shadow-2xs truncate ${theme.cellBadgeBg} ${theme.cellBadgeBorder} ${theme.cellBadgeText}`}
+                          title={`Отпуск коллеги: ${cv.colleagueName} (${cv.startDate} — ${cv.endDate}, день ${cv.dayIndex} из ${cv.totalDays})`}
+                        >
+                          <span className="truncate">{cv.colleagueName}</span>
+                          <span className="text-[8px] sm:text-[9px] opacity-75 shrink-0 ml-1">отпуск</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

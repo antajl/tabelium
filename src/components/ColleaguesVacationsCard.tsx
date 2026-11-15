@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Colleague, ColleagueVacation } from '../types/schedule';
 import { addDaysToDate, RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
+import { getColleagueTheme, AVAILABLE_THEME_KEYS } from '../utils/colleagueThemes';
 
 interface ColleaguesVacationsCardProps {
   colleagues: Colleague[];
@@ -60,11 +61,16 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
     e.preventDefault();
     if (!newColleagueName.trim() || isReadOnly) return;
 
+    const usedThemes = colleagues.filter((c) => !c.isSelf).map((c) => c.colorTheme);
+    const nextTheme =
+      AVAILABLE_THEME_KEYS.find((t) => !usedThemes.includes(t)) ||
+      AVAILABLE_THEME_KEYS[colleagues.length % AVAILABLE_THEME_KEYS.length];
+
     const newPerson: Colleague = {
       id: `colleague-${Date.now()}`,
       name: newColleagueName.trim(),
       role: newColleagueRole.trim() || 'Коллега',
-      color: '#2563eb',
+      colorTheme: nextTheme,
       vacations: [],
     };
 
@@ -357,50 +363,43 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
       )}
 
       {/* Colleagues and Self List */}
-      <div className="mt-2.5 flex flex-col gap-2">
+      <div className="mt-2 flex flex-col gap-1.5">
         {colleagues.map((person) => {
           const isSelf = person.isSelf;
+          const theme = getColleagueTheme(person.colorTheme, isSelf);
           const yearVacations = getVacationsForYear(person.vacations);
           const totalDaysInYear = yearVacations.reduce((acc, v) => acc + v.daysCount, 0);
 
           return (
             <div
               key={person.id}
-              className={`rounded-xl border p-2.5 shadow-2xs transition ${
-                isSelf
-                  ? 'bg-[#fefdfa] border-[#e8d5b5]'
-                  : 'bg-white border-[#e7ddcf]'
-              }`}
+              className={`rounded-xl border p-2 shadow-2xs transition ${theme.cardBg} ${theme.cardBorder}`}
             >
               {/* Person Header */}
-              <div className="flex items-center justify-between pb-1.5 border-b border-[#f3ede4]">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between pb-1 border-b border-[#e7ddcf]/50">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <span
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${
-                      isSelf
-                        ? 'bg-[#fef7db] text-[#7d5600] border-[#f6dc84]'
-                        : 'bg-[#eff6ff] text-[#2563eb] border-[#bfdbfe]'
-                    }`}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border shrink-0 ${theme.avatarBg} ${theme.avatarText} ${theme.avatarBorder}`}
                   >
-                    {isSelf ? <UserCheck className="w-3.5 h-3.5 text-[#b68231]" /> : person.name[0]?.toUpperCase() || 'К'}
+                    {isSelf ? (
+                      <UserCheck className="w-3 h-3 text-[#b68231]" />
+                    ) : (
+                      person.name[0]?.toUpperCase() || 'К'
+                    )}
                   </span>
-                  <div>
+                  <div className="truncate flex items-baseline gap-1">
                     <span className="text-xs font-bold text-[#252320]">
                       {isSelf ? 'Я (Мой график)' : person.name}
                     </span>
                     {person.role && !isSelf && (
-                      <span className="text-[10px] text-[#81796e] ml-1.5">({person.role})</span>
+                      <span className="text-[10px] text-[#81796e] truncate">({person.role})</span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <span
-                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                      isSelf
-                        ? 'bg-[#fef7db] text-[#7d5600] border-[#f6dc84]'
-                        : 'bg-[#eff6ff] text-[#1e40af] border-[#bfdbfe]'
-                    }`}
+                    className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`}
                     title={`Всего дней отпуска в ${selectedYear} г.`}
                   >
                     {totalDaysInYear} дн. ({selectedYear})
@@ -414,14 +413,10 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
                           setActiveColleagueIdForVacation(person.id);
                           setNewVacStartDate(`${selectedYear}-01-01`);
                         }}
-                        className={`p-1 rounded-md transition cursor-pointer ${
-                          isSelf
-                            ? 'text-[#b68231] hover:bg-[#fbf5ec]'
-                            : 'text-[#2563eb] hover:bg-[#eff6ff]'
-                        }`}
+                        className="p-1 rounded-md transition cursor-pointer text-[#81796e] hover:text-[#252320] hover:bg-white"
                         title="Добавить отпуск"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-3 h-3" />
                       </button>
 
                       {!isSelf && (
@@ -431,7 +426,7 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
                           className="p-1 rounded-md text-[#81796e] hover:text-[#93231c] hover:bg-[#fdeeed] transition cursor-pointer"
                           title="Удалить коллегу"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3 h-3" />
                         </button>
                       )}
                     </>
@@ -440,10 +435,10 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
               </div>
 
               {/* Vacations for this person in selectedYear */}
-              <div className="mt-2 flex flex-col gap-1.5">
+              <div className="mt-1 flex flex-col gap-1">
                 {yearVacations.length === 0 ? (
-                  <span className="text-[11px] text-[#81796e]/80 italic py-0.5 text-center block">
-                    Нет отпусков в {selectedYear} году
+                  <span className="text-[10px] text-[#81796e]/70 italic py-0.5 text-center block">
+                    Нет отпусков в {selectedYear} г.
                   </span>
                 ) : (
                   yearVacations.map((vac) => {
@@ -453,14 +448,10 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
                     return (
                       <div
                         key={vac.id}
-                        className={`flex items-center justify-between px-2 py-1 rounded-lg text-xs transition ${
+                        className={`flex items-center justify-between px-2 py-0.5 rounded-lg text-xs transition border ${
                           inCurrentMonth
-                            ? isSelf
-                              ? 'bg-[#fef7db] border border-[#f6dc84] text-[#7d5600]'
-                              : 'bg-[#eff6ff] border border-[#bfdbfe] text-[#1e40af]'
-                            : isSelf
-                            ? 'bg-[#fbf8f0] hover:bg-[#f5eedf] text-[#252320] border border-[#ebd8bb]'
-                            : 'bg-[#faf8f4] hover:bg-[#f3ede4] text-[#252320] border border-[#e7ddcf]/70'
+                            ? `${theme.itemBg} ${theme.itemBorder} ${theme.itemText}`
+                            : 'bg-white hover:bg-[#faf8f4] text-[#252320] border-[#e7ddcf]/70'
                         }`}
                       >
                         <button
@@ -470,9 +461,7 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
                           title="Нажмите, чтобы открыть этот месяц в календаре"
                         >
                           <Calendar
-                            className={`w-3 h-3 shrink-0 ${
-                              isSelf ? 'text-[#b68231]' : 'text-[#2563eb]'
-                            }`}
+                            className="w-3 h-3 shrink-0 opacity-80"
                             strokeWidth={1.5}
                           />
                           <span className="font-semibold text-[11px] truncate">
@@ -483,11 +472,7 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
                           </span>
                           {inCurrentMonth && (
                             <span
-                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full shrink-0 ${
-                                isSelf
-                                  ? 'bg-[#b68231] text-white'
-                                  : 'bg-[#2563eb] text-white'
-                              }`}
+                              className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full text-white shrink-0 ${theme.activeTagBg}`}
                             >
                               сейчас
                             </span>
