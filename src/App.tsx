@@ -183,9 +183,18 @@ export const App: React.FC = () => {
           if (!existing) return def;
           const existingVacIds = new Set(existing.vacations.map((v) => v.id));
           const newVacs = def.vacations.filter((v) => !existingVacIds.has(v.id));
+          let colorTheme = existing.colorTheme || def.colorTheme;
+          let role = existing.role || def.role;
+          if (existing.id === 'lekha' && existing.colorTheme === 'purple') {
+            colorTheme = 'emerald';
+          }
+          if (existing.id === 'lekha' && existing.role === 'Коллега') {
+            role = 'Напарник';
+          }
           return {
             ...existing,
-            colorTheme: existing.colorTheme || def.colorTheme,
+            role,
+            colorTheme,
             vacations: [...existing.vacations, ...newVacs].sort((a, b) =>
               a.startDate.localeCompare(b.startDate)
             ),
@@ -447,16 +456,16 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className={`bg-[#faf8f4] text-[#252320] flex flex-col font-sans antialiased ${
+      className={`bg-[#faf8f4] text-[#252320] flex flex-col font-sans antialiased min-h-screen ${
         viewMode === 'year'
-          ? 'h-screen overflow-y-auto overflow-x-hidden'
-          : 'min-h-screen'
+          ? 'overflow-y-auto xl:h-screen xl:overflow-hidden'
+          : ''
       }`}
     >
       <main
         className={`flex-1 max-w-[1700px] w-full mx-auto px-2 sm:px-4 lg:px-6 ${
           viewMode === 'year'
-            ? 'p-1.5 sm:p-2.5 h-full min-h-[580px] flex flex-col'
+            ? 'p-1.5 sm:p-2.5 flex flex-col xl:h-full'
             : 'p-3 sm:py-4'
         }`}
       >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,6 +11,7 @@ import {
   Settings,
   Download,
   Eye,
+  Sparkles,
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { SHIFT_DEFINITIONS } from '../types/schedule';
@@ -65,6 +66,52 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const [rangeTarget, setRangeTarget] = useState<string | null>(null);
   const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
 
+  // Instant Holiday Tooltip State (Old Money Styled)
+  const [hoveredHoliday, setHoveredHoliday] = useState<{
+    day: DayShiftInfo;
+    rect: DOMRect;
+  } | null>(null);
+  const holidayTooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipPos, setTooltipPos] = useState<{
+    top: number;
+    left: number;
+    isAbove: boolean;
+    arrowX: number;
+  }>({ top: 0, left: 0, isAbove: true, arrowX: 0 });
+
+  useLayoutEffect(() => {
+    if (!hoveredHoliday) return;
+    const cellRect = hoveredHoliday.rect;
+    const tooltip = holidayTooltipRef.current;
+    const tooltipWidth = tooltip ? tooltip.offsetWidth : 260;
+    const tooltipHeight = tooltip ? tooltip.offsetHeight : 80;
+
+    const cellCenterX = cellRect.left + cellRect.width / 2;
+    const isAbove = cellRect.top - tooltipHeight - 12 >= 10;
+    const top = isAbove ? cellRect.top - tooltipHeight - 8 : cellRect.bottom + 8;
+
+    const padding = 12;
+    const left = Math.max(
+      padding,
+      Math.min(window.innerWidth - tooltipWidth - padding, cellCenterX - tooltipWidth / 2)
+    );
+    const arrowX = Math.max(16, Math.min(tooltipWidth - 16, cellCenterX - left));
+
+    setTooltipPos({ top, left, isAbove, arrowX });
+  }, [hoveredHoliday]);
+
+  // Dismiss holiday tooltip immediately on scroll, resize or when selecting
+  useEffect(() => {
+    if (!hoveredHoliday) return;
+    const handleDismiss = () => setHoveredHoliday(null);
+    window.addEventListener('scroll', handleDismiss, { passive: true });
+    window.addEventListener('resize', handleDismiss, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleDismiss);
+      window.removeEventListener('resize', handleDismiss);
+    };
+  }, [hoveredHoliday]);
+
   const rangeMin =
     rangeAnchor && rangeTarget
       ? rangeAnchor < rangeTarget
@@ -113,6 +160,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   }, [isMouseDown]);
 
   const handleCellMouseDown = (day: DayShiftInfo, e: React.MouseEvent) => {
+    setHoveredHoliday(null);
     if (isReadOnly) return;
     if (e.button !== 0) return; // Only primary left-click
     setIsMouseDown(true);
@@ -120,9 +168,32 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     setRangeTarget(day.dateStr);
   };
 
-  const handleCellMouseEnter = (day: DayShiftInfo) => {
-    if (isReadOnly || !isMouseDown) return;
-    setRangeTarget(day.dateStr);
+  const handleCellMouseEnter = (day: DayShiftInfo, e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMouseDown) {
+      setHoveredHoliday(null);
+      if (!isReadOnly) {
+        setRangeTarget(day.dateStr);
+      }
+      return;
+    }
+
+    if (day.holidayName) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const cellCenterX = rect.left + rect.width / 2;
+      const isAbove = rect.top - 90 >= 10;
+      const top = isAbove ? rect.top - 88 : rect.bottom + 8;
+      const left = Math.max(12, Math.min(window.innerWidth - 272, cellCenterX - 130));
+      const arrowX = Math.max(16, Math.min(244, cellCenterX - left));
+
+      setTooltipPos({ top, left, isAbove, arrowX });
+      setHoveredHoliday({ day, rect });
+    } else {
+      setHoveredHoliday(null);
+    }
+  };
+
+  const handleCellMouseLeave = () => {
+    setHoveredHoliday(null);
   };
 
   const handleCellMouseUp = (day: DayShiftInfo, e: React.MouseEvent<HTMLDivElement>) => {
@@ -132,6 +203,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       // Single click without dragging across multiple dates -> open DayModal Popover
       if (rangeAnchor === day.dateStr && rangeTarget === day.dateStr) {
         clearRange();
+        setHoveredHoliday(null);
         const rect = e.currentTarget.getBoundingClientRect();
         onSelectDay(day, rect);
       }
@@ -301,7 +373,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             <div
               key={day.dateStr}
               onMouseDown={(e) => handleCellMouseDown(day, e)}
-              onMouseEnter={() => handleCellMouseEnter(day)}
+              onMouseEnter={(e) => handleCellMouseEnter(day, e)}
+              onMouseLeave={handleCellMouseLeave}
               onMouseUp={(e) => handleCellMouseUp(day, e)}
               className={`relative flex flex-col justify-between h-[58px] sm:h-[68px] lg:h-[74px] xl:h-[78px] p-1.5 sm:p-2 rounded-xl border select-none cursor-pointer transition-all shadow-2xs ${
                 def.colorBg
@@ -346,10 +419,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                   {/* 2X Double Pay Tag on Holidays */}
                   {day.isDoublePay && (
-                    <span
-                      className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0"
-                      title={`Двойная оплата: ${day.holidayName || 'Праздник РФ'}`}
-                    >
+                    <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-[#fbf4f0] text-[#9d4c37] border border-[#efc8b4] shrink-0">
                       2X
                     </span>
                   )}
@@ -380,10 +450,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               {/* Bottom Slot (Reserved for Holiday text) */}
               <div className="h-3.5 sm:h-4 flex items-center justify-center overflow-hidden">
                 {day.holidayName ? (
-                  <span
-                    className="text-[9px] sm:text-[10px] text-[#9d4c37] font-semibold truncate leading-none block text-center"
-                    title={day.holidayName}
-                  >
+                  <span className="text-[9px] sm:text-[10px] text-[#9d4c37] font-semibold truncate leading-none block text-center">
                     {day.holidayName}
                   </span>
                 ) : null}
@@ -458,6 +525,66 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       {isReadOnly && (
         <div className="mt-4 p-3 bg-[#fbf4f0] border border-[#efc8b4] rounded-xl text-center text-xs text-[#9d4c37]">
           Режим просмотра графика (только чтение). Чтобы редактировать, вернитесь к своему графику.
+        </div>
+      )}
+
+      {/* Instant Holiday Tooltip (Old Money Styled) */}
+      {hoveredHoliday && !isMouseDown && (
+        <div
+          ref={holidayTooltipRef}
+          role="tooltip"
+          className="fixed z-50 pointer-events-none w-max max-w-[280px] sm:max-w-xs px-3 py-2.5 bg-[#252320] text-[#faf8f4] border border-[#3e3830] rounded-xl shadow-[0_10px_28px_rgba(0,0,0,0.28)] flex flex-col gap-1.5 animate-in fade-in-0 zoom-in-95 duration-100"
+          style={{
+            top: tooltipPos.top,
+            left: tooltipPos.left,
+          }}
+        >
+          {/* Header: Sparkles icon + Badge */}
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#f3e7d5]">
+              <Sparkles className="w-3.5 h-3.5 text-[#b68231] shrink-0" strokeWidth={1.75} />
+              <span>Праздник РФ</span>
+            </div>
+            {hoveredHoliday.day.isDoublePay ? (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#9d4c37] text-white shadow-2xs">
+                2X Двойная оплата
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-white/10 text-[#d8cfc4]">
+                ст. 112 ТК РФ
+              </span>
+            )}
+          </div>
+
+          {/* Holiday Name */}
+          <div className="text-xs sm:text-[13px] font-bold text-[#faf8f4] leading-snug">
+            {hoveredHoliday.day.holidayName}
+          </div>
+
+          {/* Subtitle / TK RF Description */}
+          <div className="text-[10px] text-[#c4b5a0] leading-relaxed">
+            {hoveredHoliday.day.isDoublePay
+              ? 'Официальный праздничный день. Работа и подработка оплачиваются в двойном размере (2X).'
+              : 'Официальный нерабочий праздничный день в соответствии с Трудовым кодексом РФ.'}
+          </div>
+
+          {/* Optional Note preview if present */}
+          {hoveredHoliday.day.note && (
+            <div className="flex items-center gap-1.5 pt-1 border-t border-white/10 text-[10px] text-[#d8b57a]">
+              <FileText className="w-3 h-3 text-[#b68231] shrink-0" strokeWidth={1.5} />
+              <span className="truncate">Заметка: {hoveredHoliday.day.note}</span>
+            </div>
+          )}
+
+          {/* Caret Arrow pointing at hovered cell */}
+          <div
+            className={`absolute w-2.5 h-2.5 bg-[#252320] border-[#3e3830] rotate-45 -translate-x-1/2 ${
+              tooltipPos.isAbove
+                ? '-bottom-[6px] border-b border-r'
+                : '-top-[6px] border-t border-l'
+            }`}
+            style={{ left: tooltipPos.arrowX }}
+          />
         </div>
       )}
     </div>

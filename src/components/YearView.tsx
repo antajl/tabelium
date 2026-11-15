@@ -9,6 +9,7 @@ import {
   Settings,
   Download,
   Eye,
+  Sparkles,
 } from 'lucide-react';
 import type {
   Colleague,
@@ -366,7 +367,7 @@ export const YearView: React.FC<YearViewProps> = ({
                 if ((e.target as HTMLElement).closest('button[data-day]')) return;
                 handleMonthClick(mData.month);
               }}
-              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer overflow-hidden ${
+              className={`rounded-xl flex flex-col justify-between transition-all duration-200 cursor-pointer ${
                 isFitScreen
                   ? 'h-full min-h-[135px] p-1.5 sm:p-2'
                   : 'p-2 sm:p-2.5'
@@ -479,9 +480,6 @@ export const YearView: React.FC<YearViewProps> = ({
                         setHoveredDay({ day, rect });
                       }}
                       onMouseLeave={() => setHoveredDay(null)}
-                      title={`${day.dateStr} — ${shiftDef.label}${
-                        day.holidayName ? ` (${day.holidayName})` : ''
-                      }`}
                       className={`${
                         isFitScreen
                           ? 'h-full min-h-0 rounded p-0.5 overflow-hidden'
@@ -572,10 +570,11 @@ export const YearView: React.FC<YearViewProps> = ({
           </div>
 
           {hoveredDay.day.holidayName && (
-            <div className="text-[10px] text-[#fcd34d] flex items-center gap-1">
-              <span>⭐ {hoveredDay.day.holidayName}</span>
+            <div className="text-[10px] text-[#f3e7d5] flex items-center gap-1.5 pt-0.5">
+              <Sparkles className="w-3 h-3 text-[#b68231] shrink-0" strokeWidth={1.75} />
+              <span className="font-medium">{hoveredDay.day.holidayName}</span>
               {hoveredDay.day.isDoublePay && (
-                <span className="font-bold underline ml-1">(2X оплата)</span>
+                <span className="font-bold text-[#efc8b4] ml-auto">(2X оплата)</span>
               )}
             </div>
           )}

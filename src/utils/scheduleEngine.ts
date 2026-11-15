@@ -89,7 +89,7 @@ export function getColleagueVacationsForDate(
           endDate: vac.endDate,
           dayIndex: dayIdx,
           totalDays: vac.daysCount,
-          colorTheme: colleague.colorTheme || (colleague.id === 'lekha' ? 'purple' : 'blue'),
+          colorTheme: colleague.colorTheme || (colleague.id === 'lekha' ? 'emerald' : 'blue'),
         });
       }
     }
@@ -190,8 +190,8 @@ export function loadInitialColleagues(): Colleague[] {
     {
       id: 'lekha',
       name: 'Лёха',
-      role: 'Коллега',
-      colorTheme: 'purple',
+      role: 'Напарник',
+      colorTheme: 'emerald',
       vacations: [
         {
           id: 'lekha-vac-1',

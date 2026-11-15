@@ -6,6 +6,8 @@ import {
   Calendar,
   X,
   UserCheck,
+  Palette,
+  Pencil,
 } from 'lucide-react';
 import type { Colleague, ColleagueVacation } from '../types/schedule';
 import { addDaysToDate, RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
@@ -43,6 +45,11 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
   const [isAddingColleague, setIsAddingColleague] = useState<boolean>(false);
   const [newColleagueName, setNewColleagueName] = useState<string>('');
   const [newColleagueRole, setNewColleagueRole] = useState<string>('Напарник');
+  const [newColleagueTheme, setNewColleagueTheme] = useState<string>('emerald');
+
+  // Quick inline actions state for colleagues
+  const [colorPickerColleagueId, setColorPickerColleagueId] = useState<string | null>(null);
+  const [editingColleague, setEditingColleague] = useState<{ id: string; name: string; role: string } | null>(null);
 
   // Modal / Form state for adding a vacation to a specific colleague
   const [activeColleagueIdForVacation, setActiveColleagueIdForVacation] = useState<string | null>(null);
@@ -57,26 +64,51 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
     return `${d} ${shortMonth} ${y}`;
   };
 
-  const handleAddColleague = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newColleagueName.trim() || isReadOnly) return;
-
+  const handleOpenAddColleague = () => {
     const usedThemes = colleagues.filter((c) => !c.isSelf).map((c) => c.colorTheme);
     const nextTheme =
       AVAILABLE_THEME_KEYS.find((t) => !usedThemes.includes(t)) ||
       AVAILABLE_THEME_KEYS[colleagues.length % AVAILABLE_THEME_KEYS.length];
+    setNewColleagueTheme(nextTheme);
+    setNewColleagueName('');
+    setNewColleagueRole('Напарник');
+    setIsAddingColleague(true);
+    setColorPickerColleagueId(null);
+    setEditingColleague(null);
+  };
+
+  const handleAddColleague = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newColleagueName.trim() || isReadOnly) return;
 
     const newPerson: Colleague = {
       id: `colleague-${Date.now()}`,
       name: newColleagueName.trim(),
-      role: newColleagueRole.trim() || 'Коллега',
-      colorTheme: nextTheme,
+      role: newColleagueRole.trim() || 'Напарник',
+      colorTheme: newColleagueTheme,
       vacations: [],
     };
 
     onUpdateColleagues([...colleagues, newPerson]);
     setNewColleagueName('');
     setIsAddingColleague(false);
+  };
+
+  const handleChangeColleagueTheme = (colleagueId: string, themeKey: string) => {
+    if (isReadOnly) return;
+    const updated = colleagues.map((c) =>
+      c.id === colleagueId ? { ...c, colorTheme: themeKey } : c
+    );
+    onUpdateColleagues(updated);
+  };
+
+  const handleUpdateColleagueInfo = (id: string, name: string, role: string) => {
+    if (isReadOnly) return;
+    const updated = colleagues.map((c) =>
+      c.id === id ? { ...c, name: name.trim() || c.name, role: role.trim() } : c
+    );
+    onUpdateColleagues(updated);
+    setEditingColleague(null);
   };
 
   const handleDeleteColleague = (id: string) => {
@@ -205,12 +237,12 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
           {!isReadOnly && (
             <button
               type="button"
-              onClick={() => setIsAddingColleague(true)}
+              onClick={handleOpenAddColleague}
               className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-[#eff6ff] hover:bg-[#dbeafe] text-[#1d4ed8] border border-[#bfdbfe] transition shadow-2xs cursor-pointer active:scale-95"
               title="Добавить напарника"
             >
               <Plus className="w-3 h-3" strokeWidth={2} />
-              <span className="hidden sm:inline">Коллега</span>
+              <span className="hidden sm:inline">Напарник</span>
             </button>
           )}
         </div>
@@ -220,10 +252,10 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
       {isAddingColleague && (
         <form
           onSubmit={handleAddColleague}
-          className="mt-3 p-3 bg-[#f8f5ee] border border-[#d8b57a] rounded-xl flex flex-col gap-2 animate-in fade-in-0"
+          className="mt-3 p-3 bg-[#f8f5ee] border border-[#d8b57a] rounded-xl flex flex-col gap-2.5 animate-in fade-in-0"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#252320]">Новый коллега</span>
+            <span className="text-xs font-bold text-[#252320]">Новый напарник</span>
             <button
               type="button"
               onClick={() => setIsAddingColleague(false)}
@@ -257,7 +289,57 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
             </div>
           </div>
 
-          <div className="flex justify-end gap-1.5 mt-1">
+          {/* Quick role selection chips */}
+          <div className="flex items-center gap-1.5 -mt-1">
+            <span className="text-[10px] text-[#81796e]">Быстрый выбор:</span>
+            {['Напарник', 'Сменщик', 'Коллега'].map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setNewColleagueRole(r)}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition cursor-pointer border ${
+                  newColleagueRole === r
+                    ? 'bg-[#b68231] text-white border-[#b68231]'
+                    : 'bg-white text-[#81796e] border-[#e7ddcf] hover:text-[#252320]'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+
+          {/* Color Picker Swatches */}
+          <div>
+            <label className="text-[10px] font-semibold text-[#81796e] block mb-1">
+              Цвет карточки и отпусков:
+            </label>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+              {AVAILABLE_THEME_KEYS.map((key) => {
+                const t = getColleagueTheme(key);
+                const isSelected = newColleagueTheme === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setNewColleagueTheme(key)}
+                    className={`flex items-center gap-1 px-1.5 py-1 rounded-lg text-[10px] border transition cursor-pointer ${
+                      isSelected
+                        ? 'ring-2 ring-[#b68231] font-bold ' + t.badgeBg + ' ' + t.badgeText + ' ' + t.badgeBorder
+                        : 'bg-white hover:bg-[#fbfaf8] text-[#81796e] border-[#e7ddcf]'
+                    }`}
+                  >
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: t.accentColor }}
+                    />
+                    <span className="truncate">{t.name.split(' ')[0]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-1.5 mt-0.5">
             <button
               type="button"
               onClick={() => setIsAddingColleague(false)}
@@ -378,15 +460,32 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
               {/* Person Header */}
               <div className="flex items-center justify-between pb-1 border-b border-[#e7ddcf]/50">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border shrink-0 ${theme.avatarBg} ${theme.avatarText} ${theme.avatarBorder}`}
-                  >
-                    {isSelf ? (
-                      <UserCheck className="w-3 h-3 text-[#b68231]" />
-                    ) : (
-                      person.name[0]?.toUpperCase() || 'К'
-                    )}
-                  </span>
+                  {!isSelf && !isReadOnly ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setColorPickerColleagueId(
+                          colorPickerColleagueId === person.id ? null : person.id
+                        );
+                        setEditingColleague(null);
+                      }}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border shrink-0 transition-transform hover:scale-110 cursor-pointer ${theme.avatarBg} ${theme.avatarText} ${theme.avatarBorder}`}
+                      title="Кликните, чтобы сменить цвет"
+                    >
+                      {person.name[0]?.toUpperCase() || 'Н'}
+                    </button>
+                  ) : (
+                    <span
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border shrink-0 ${theme.avatarBg} ${theme.avatarText} ${theme.avatarBorder}`}
+                    >
+                      {isSelf ? (
+                        <UserCheck className="w-3 h-3 text-[#b68231]" />
+                      ) : (
+                        person.name[0]?.toUpperCase() || 'Н'
+                      )}
+                    </span>
+                  )}
+
                   <div className="truncate flex items-baseline gap-1">
                     <span className="text-xs font-bold text-[#252320]">
                       {isSelf ? 'Я (Мой график)' : person.name}
@@ -420,19 +519,160 @@ export const ColleaguesVacationsCard: React.FC<ColleaguesVacationsCardProps> = (
                       </button>
 
                       {!isSelf && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteColleague(person.id)}
-                          className="p-1 rounded-md text-[#81796e] hover:text-[#93231c] hover:bg-[#fdeeed] transition cursor-pointer"
-                          title="Удалить коллегу"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setColorPickerColleagueId(
+                                colorPickerColleagueId === person.id ? null : person.id
+                              );
+                              setEditingColleague(null);
+                            }}
+                            className={`p-1 rounded-md transition cursor-pointer ${
+                              colorPickerColleagueId === person.id
+                                ? 'bg-white text-[#b68231] shadow-2xs'
+                                : 'text-[#81796e] hover:text-[#252320] hover:bg-white'
+                            }`}
+                            title="Сменить цвет напарника"
+                          >
+                            <Palette className="w-3 h-3" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingColleague(
+                                editingColleague?.id === person.id
+                                  ? null
+                                  : { id: person.id, name: person.name, role: person.role || '' }
+                              );
+                              setColorPickerColleagueId(null);
+                            }}
+                            className={`p-1 rounded-md transition cursor-pointer ${
+                              editingColleague?.id === person.id
+                                ? 'bg-white text-[#b68231] shadow-2xs'
+                                : 'text-[#81796e] hover:text-[#252320] hover:bg-white'
+                            }`}
+                            title="Изменить имя или роль"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteColleague(person.id)}
+                            className="p-1 rounded-md text-[#81796e] hover:text-[#93231c] hover:bg-[#fdeeed] transition cursor-pointer"
+                            title="Удалить напарника"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </>
                       )}
                     </>
                   )}
                 </div>
               </div>
+
+              {/* Inline Color Palette Picker */}
+              {colorPickerColleagueId === person.id && !isSelf && (
+                <div className="flex items-center gap-1.5 py-1.5 px-2 bg-white/90 rounded-lg border border-[#e7ddcf] my-1.5 animate-in fade-in-0">
+                  <span className="text-[10px] text-[#81796e] font-medium mr-1">Выбрать цвет:</span>
+                  <div className="flex items-center gap-1.5">
+                    {AVAILABLE_THEME_KEYS.map((key) => {
+                      const t = getColleagueTheme(key);
+                      const isCurrent = (person.colorTheme || 'blue') === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          title={t.name}
+                          onClick={() => {
+                            handleChangeColleagueTheme(person.id, key);
+                            setColorPickerColleagueId(null);
+                          }}
+                          className={`w-4 h-4 rounded-full transition-transform cursor-pointer border ${
+                            isCurrent
+                              ? 'ring-2 ring-offset-1 ring-[#b68231] scale-125'
+                              : 'hover:scale-110 opacity-75 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: t.accentColor, borderColor: t.avatarBorder }}
+                        />
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setColorPickerColleagueId(null)}
+                    className="ml-auto text-[#81796e] hover:text-[#252320] p-0.5"
+                    title="Закрыть"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
+              {/* Inline Edit Name & Role */}
+              {editingColleague?.id === person.id && !isSelf && (
+                <div className="flex flex-col gap-1.5 py-1.5 px-2 bg-white/90 rounded-lg border border-[#e7ddcf] my-1.5 animate-in fade-in-0">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={editingColleague.name}
+                      onChange={(e) =>
+                        setEditingColleague({ ...editingColleague, name: e.target.value })
+                      }
+                      className="bg-white border border-[#e7ddcf] rounded px-2 py-0.5 text-xs text-[#252320] flex-1 focus:outline-none focus:border-[#d8b57a]"
+                      placeholder="Имя"
+                    />
+                    <input
+                      type="text"
+                      value={editingColleague.role}
+                      onChange={(e) =>
+                        setEditingColleague({ ...editingColleague, role: e.target.value })
+                      }
+                      className="bg-white border border-[#e7ddcf] rounded px-2 py-0.5 text-xs text-[#252320] flex-1 focus:outline-none focus:border-[#d8b57a]"
+                      placeholder="Роль (Напарник...)"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleUpdateColleagueInfo(
+                          person.id,
+                          editingColleague.name,
+                          editingColleague.role
+                        )
+                      }
+                      className="px-2 py-0.5 bg-[#b68231] text-white rounded text-[10px] font-semibold hover:bg-[#9a6c25] transition cursor-pointer"
+                    >
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingColleague(null)}
+                      className="p-0.5 text-[#81796e] hover:text-[#252320]"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-[#81796e]">Роль:</span>
+                    {['Напарник', 'Сменщик', 'Коллега'].map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setEditingColleague({ ...editingColleague, role: r })}
+                        className={`px-1.5 py-0.2 rounded text-[9px] font-medium transition cursor-pointer border ${
+                          editingColleague.role === r
+                            ? 'bg-[#b68231] text-white border-[#b68231]'
+                            : 'bg-white text-[#81796e] border-[#e7ddcf] hover:text-[#252320]'
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Vacations for this person in selectedYear */}
               <div className="mt-1 flex flex-col gap-1">

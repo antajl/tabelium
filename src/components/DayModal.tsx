@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { DayShiftInfo, ShiftType } from '../types/schedule';
 import { RUSSIAN_MONTH_NAMES } from '../utils/scheduleEngine';
+import { getColleagueTheme } from '../utils/colleagueThemes';
 
 export interface DayModalProps {
   day: DayShiftInfo | null;
@@ -227,24 +228,33 @@ export const DayModal: React.FC<DayModalProps> = ({
 
       {/* Colleague Vacations Alert */}
       {day.colleagueVacations && day.colleagueVacations.length > 0 && (
-        <div className="mt-2.5 p-2 rounded-xl bg-[#eff6ff] border border-[#bfdbfe] text-[11px] text-[#1e40af] flex flex-col gap-1 shadow-2xs">
-          <div className="font-semibold flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-[#2563eb] shrink-0" strokeWidth={1.5} />
-            <span>Отпуск коллег в этот день:</span>
+        <div className="mt-2.5 p-2 rounded-xl bg-[#f8f6f0] border border-[#e7ddcf] text-[11px] text-[#252320] flex flex-col gap-1.5 shadow-2xs">
+          <div className="font-semibold flex items-center gap-1.5 text-[#81796e]">
+            <Users className="w-3.5 h-3.5 text-[#b68231] shrink-0" strokeWidth={1.5} />
+            <span>Отпуск напарников в этот день:</span>
           </div>
-          {day.colleagueVacations.map((cv) => (
-            <div
-              key={cv.colleagueId + cv.vacationId}
-              className="flex items-center justify-between pl-5 text-[10px]"
-            >
-              <span>
-                <strong>{cv.colleagueName}</strong> ({cv.startDate} — {cv.endDate})
-              </span>
-              <span className="font-semibold text-[#2563eb]">
-                день {cv.dayIndex} из {cv.totalDays}
-              </span>
-            </div>
-          ))}
+          {day.colleagueVacations.map((cv) => {
+            const theme = getColleagueTheme(cv.colorTheme);
+            return (
+              <div
+                key={cv.colleagueId + cv.vacationId}
+                className={`flex items-center justify-between px-2 py-1 rounded-lg border text-[10px] ${theme.badgeBg} ${theme.badgeBorder} ${theme.badgeText}`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: theme.accentColor }}
+                  />
+                  <span className="truncate">
+                    <strong>{cv.colleagueName}</strong> ({cv.startDate} — {cv.endDate})
+                  </span>
+                </div>
+                <span className="font-semibold shrink-0 ml-1">
+                  день {cv.dayIndex} из {cv.totalDays}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
 
