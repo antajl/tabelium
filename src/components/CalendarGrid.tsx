@@ -310,28 +310,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       2X
                     </span>
                   )}
-
-                  {/* Overtime Tag in Header when Colleague is on Vacation (never displaces vacation) */}
-                  {day.status === 'overtime' && day.colleagueVacations && day.colleagueVacations.length > 0 && (
-                    <span
-                      className="inline-flex items-center px-1.5 py-0.2 rounded-md text-[9px] font-bold text-[#7f1d1d] bg-[#fbdcd9] border border-[#e57373] border-dashed shrink-0"
-                      title="Подработка"
-                    >
-                      <span className="hidden sm:inline">Подработка</span>
-                      <span className="sm:hidden">Подр.</span>
-                    </span>
-                  )}
                 </div>
               </div>
 
-              {/* Center Area: Overtime (when no colleague vacations) OR Colleague Vacations */}
+              {/* Center Area: Colleague Vacations */}
               <div className="flex flex-col items-center justify-center my-auto w-full overflow-hidden">
-                {day.status === 'overtime' && (!day.colleagueVacations || day.colleagueVacations.length === 0) && (
-                  <span className="text-[10px] sm:text-xs font-bold text-[#7f1d1d] px-1.5 py-0.5 rounded-md bg-[#fbdcd9] border border-[#e57373] border-dashed">
-                    Подработка
-                  </span>
-                )}
-
                 {day.colleagueVacations && day.colleagueVacations.length > 0 && (
                   <div className="flex flex-col gap-0.5 w-full">
                     {day.colleagueVacations.map((cv) => {
