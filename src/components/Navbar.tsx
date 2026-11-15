@@ -46,7 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Tabelium Brand Emblem (Monogram T with night shift crescent moon) */}
             <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-[#b68231]/40 shadow-xs group-hover:border-[#b68231] transition-colors bg-black">
               <img
-                src="/logo.png"
+                src={`${import.meta.env.BASE_URL}logo.png`}
                 alt="Табелиум — Tabelium"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
