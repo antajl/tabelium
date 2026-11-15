@@ -73,63 +73,63 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-md bg-[#201e1b] border border-[#332e27] rounded-2xl p-5 sm:p-6 shadow-2xl">
+        <div className="flex items-center justify-between pb-3 border-b border-[#2d2924]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-              <FileJson className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#272420] text-[#deb887] border border-[#38332c] flex items-center justify-center">
+              <FileJson className="w-4 h-4" strokeWidth={1.5} />
             </div>
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className="text-base font-semibold text-[#ede7dc]">
               Экспорт и импорт данных
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-400 hover:text-slate-200 transition"
+            className="p-1.5 rounded-lg bg-[#272420] hover:bg-[#332f2a] text-[#999081] hover:text-[#ede7dc] transition"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {successMsg && (
-          <div className="mt-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="mt-3 p-3 rounded-lg bg-[#1f2b24] border border-[#364d3f] text-[#a3c2b4] text-xs flex items-center gap-2">
+            <Check className="w-4 h-4 text-[#6d9684] shrink-0" strokeWidth={1.5} />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="mt-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="mt-3 p-3 rounded-lg bg-[#30201e] border border-[#543632] text-[#dcaaa4] text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-[#c97b71] shrink-0" strokeWidth={1.5} />
             <span>{errorMsg}</span>
           </div>
         )}
 
         <div className="mt-4 space-y-3 text-xs">
-          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-            <h4 className="font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
-              <Download className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="p-3.5 rounded-xl bg-[#24211d] border border-[#332f2a]">
+            <h4 className="font-semibold text-[#ede7dc] mb-1 flex items-center gap-1.5">
+              <Download className="w-3.5 h-3.5 text-[#deb887]" strokeWidth={1.5} />
               Скачать резервную копию (JSON)
             </h4>
-            <p className="text-slate-400 text-xs mb-3">
+            <p className="text-[#999081] text-xs mb-3">
               Сохраняет все смены, подработки, отпуска и настройки в JSON файл на компьютер или телефон.
             </p>
             <button
               onClick={handleExport}
-              className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 rounded-lg bg-[#deb887] hover:bg-[#ebd0a7] text-[#181715] font-semibold text-xs transition flex items-center justify-center gap-1.5"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>Скачать файл бэкапа</span>
             </button>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
-            <h4 className="font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
-              <Upload className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="p-3.5 rounded-xl bg-[#24211d] border border-[#332f2a]">
+            <h4 className="font-semibold text-[#ede7dc] mb-1 flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-[#a3c2b4]" strokeWidth={1.5} />
               Восстановить из файла
             </h4>
-            <p className="text-slate-400 text-xs mb-3">
+            <p className="text-[#999081] text-xs mb-3">
               Загрузите сохраненный JSON файл для восстановления или переноса графика.
             </p>
             <input
@@ -141,18 +141,18 @@ export const ExportImportModal: React.FC<ExportImportModalProps> = ({
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 font-medium text-xs transition flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 rounded-lg bg-[#2b2722] hover:bg-[#36312a] border border-[#3d3730] text-[#ede7dc] font-medium text-xs transition flex items-center justify-center gap-1.5"
             >
-              <Upload className="w-3.5 h-3.5" />
+              <Upload className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>Выбрать файл с устройства</span>
             </button>
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+        <div className="mt-4 pt-3 border-t border-[#2d2924] flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-750 text-slate-300 transition"
+            className="px-4 py-1.5 rounded-lg text-xs font-medium bg-[#272420] hover:bg-[#332f2a] text-[#999081] hover:text-[#ede7dc] transition"
           >
             Закрыть
           </button>
