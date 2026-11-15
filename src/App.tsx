@@ -9,12 +9,12 @@ import {
   calculateMonthStatistics,
   decodeSharePayload,
   DEFAULT_CONFIG,
+  formatDateISO,
   generateShareUrl,
   getMonthDays,
   loadInitialOverrides,
 } from './utils/scheduleEngine';
 import { Navbar } from './components/Navbar';
-import { LegendBar } from './components/LegendBar';
 import { CalendarGrid } from './components/CalendarGrid';
 import { MonthStats } from './components/MonthStats';
 import { DayModal } from './components/DayModal';
@@ -146,6 +146,53 @@ export const App: React.FC = () => {
     });
   };
 
+  // Range Actions (Point 6)
+  const handleApplyRange = (startStr: string, endStr: string, status: ShiftType) => {
+    if (isReadOnly) return;
+    const [minStr, maxStr] = startStr <= endStr ? [startStr, endStr] : [endStr, startStr];
+    setOverrides((prev) => {
+      const next = { ...prev };
+      const [yA, mA, dA] = minStr.split('-').map(Number);
+      const [yB, mB, dB] = maxStr.split('-').map(Number);
+      const curr = new Date(Date.UTC(yA, mA - 1, dA));
+      const end = new Date(Date.UTC(yB, mB - 1, dB));
+
+      while (curr <= end) {
+        const dStr = formatDateISO(
+          curr.getUTCFullYear(),
+          curr.getUTCMonth() + 1,
+          curr.getUTCDate()
+        );
+        next[dStr] = { status };
+        curr.setUTCDate(curr.getUTCDate() + 1);
+      }
+      return next;
+    });
+  };
+
+  const handleResetRange = (startStr: string, endStr: string) => {
+    if (isReadOnly) return;
+    const [minStr, maxStr] = startStr <= endStr ? [startStr, endStr] : [endStr, startStr];
+    setOverrides((prev) => {
+      const next = { ...prev };
+      const [yA, mA, dA] = minStr.split('-').map(Number);
+      const [yB, mB, dB] = maxStr.split('-').map(Number);
+      const curr = new Date(Date.UTC(yA, mA - 1, dA));
+      const end = new Date(Date.UTC(yB, mB - 1, dB));
+
+      while (curr <= end) {
+        const dStr = formatDateISO(
+          curr.getUTCFullYear(),
+          curr.getUTCMonth() + 1,
+          curr.getUTCDate()
+        );
+        delete next[dStr];
+        curr.setUTCDate(curr.getUTCDate() + 1);
+      }
+      return next;
+    });
+  };
+
   const handleRestoreGoogleSheet = () => {
     const initial = loadInitialOverrides();
     setOverrides(initial);
@@ -178,28 +225,36 @@ export const App: React.FC = () => {
         onExitReadOnly={handleExitReadOnly}
       />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 space-y-4">
-        <LegendBar />
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Left Column: Calendar (8 cols on lg) */}
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <CalendarGrid
+              year={currentYear}
+              month={currentMonth}
+              days={monthDays}
+              isReadOnly={isReadOnly}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onSelectYear={setCurrentYear}
+              onSelectMonth={setCurrentMonth}
+              onJumpToday={handleJumpToday}
+              onSelectDay={(day) => setSelectedDay(day)}
+              onApplyRange={handleApplyRange}
+              onResetRange={handleResetRange}
+            />
+          </div>
 
-        <CalendarGrid
-          year={currentYear}
-          month={currentMonth}
-          days={monthDays}
-          isReadOnly={isReadOnly}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          onSelectYear={setCurrentYear}
-          onSelectMonth={setCurrentMonth}
-          onJumpToday={handleJumpToday}
-          onSelectDay={(day) => setSelectedDay(day)}
-        />
-
-        <MonthStats
-          stats={monthStats}
-          month={currentMonth}
-          year={currentYear}
-          config={config}
-        />
+          {/* Right Column: Month Summary (4 cols on lg) */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <MonthStats
+              stats={monthStats}
+              month={currentMonth}
+              year={currentYear}
+              config={config}
+            />
+          </div>
+        </div>
       </main>
 
       <footer className="py-5 border-t border-[#e7ddcf] text-center text-xs text-[#81796e]">

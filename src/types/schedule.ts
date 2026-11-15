@@ -77,12 +77,14 @@ export interface DayShiftInfo {
   dayOfWeek: number; // 1 (Пн) .. 7 (Вс)
   dayOfWeekName: string; // 'Пн', 'Вт'...
   status: ShiftType;
+  baseStatus: ShiftType;
   isOverridden: boolean;
   isHoliday: boolean;
   isDoublePay: boolean;
   holidayName?: string;
   note?: string;
   isToday: boolean;
+  isPast: boolean;
 }
 
 export interface MonthStatistics {

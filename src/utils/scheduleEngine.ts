@@ -83,7 +83,10 @@ export function getMonthDays(
     const holidayInfo = getRussianHolidayInfo(dateStr);
     const override = overrides[dateStr];
     const isOverridden = !!override;
-    const status: ShiftType = override ? override.status : getBaseCycleShift(dateStr, config);
+    const baseStatus = getBaseCycleShift(dateStr, config);
+    const status: ShiftType = override ? override.status : baseStatus;
+    const isPast = dateStr < todayStr;
+    const isToday = dateStr === todayStr;
 
     const isDoublePay = holidayInfo.isDoublePayEligible && (status === 'work' || status === 'overtime');
 
@@ -93,12 +96,14 @@ export function getMonthDays(
       dayOfWeek,
       dayOfWeekName,
       status,
+      baseStatus,
       isOverridden,
       isHoliday: holidayInfo.isHoliday,
       isDoublePay,
       holidayName: holidayInfo.name,
       note: override?.note,
-      isToday: dateStr === todayStr,
+      isToday,
+      isPast,
     });
   }
 
